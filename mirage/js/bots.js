@@ -208,6 +208,12 @@ const Bots = (() => {
         }
       }
       if (clock > 85 && S.phase !== 'post') { S.phase = 'execute'; for (const p of ts) if (p.ai.role === 'lurk' || p.ai.role === 'control') p.ai.role = 'exec'; }
+      // a human carrying the bomb gets told where the team is going
+      const human = Game.players.find(p => !p.isBot && p.alive && p.team === 'T' && p.slots[5]);
+      if (human && (S.phase === 'execute' || S.phase === 'gather') && ts.length && Game.time - (S.toldHuman || -99) > 20) {
+        S.toldHuman = Game.time;
+        say(ts[0], S.phase === 'execute' ? `We're on ${S.site}, bring the bomb!` : `Take the bomb to ${S.site}`, true);
+      }
     }
     // ---- CT ----
     const C = TS.CT;
