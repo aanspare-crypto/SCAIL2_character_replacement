@@ -8,7 +8,7 @@ This is a fan-made tribute. It is not affiliated with Valve and uses none of the
 
 ## Play
 
-Open `mirage/index.html` in a desktop browser (Chrome, Edge or Firefox). It needs WebGL and a network connection to load Three.js and the fonts. Click **Play** to lock the mouse; the game asks for fullscreen so that browser shortcuts such as Ctrl+W don't close the tab mid-round.
+Open `mirage/index.html` in a desktop browser (Chrome, Edge or Firefox). It needs WebGL and a network connection to load Three.js and the fonts. Click **Play** to go fullscreen and lock the mouse. In Chrome and Edge, fullscreen also stops shortcuts such as Ctrl+W from closing the tab mid-round; in other browsers you're asked before the tab closes.
 
 In the menu you can set:
 
@@ -26,12 +26,12 @@ In the menu you can set:
 | WASD | Move |
 | Mouse | Look (sensitivity uses the CS2 scale) |
 | Mouse 1 | Fire, knife slash, throw grenade, plant (hold with the C4 out) |
-| Mouse 2 | Scope (AWP, SSG 08), knife stab, underhand grenade throw |
+| Mouse 2 | Scope (AWP, SSG 08, SG 553, AUG), knife stab, underhand grenade throw |
 | Shift | Walk. Walking makes no footstep noise |
 | C or Ctrl | Crouch |
 | Space | Jump |
 | R | Reload |
-| E | Defuse (hold, CT) and swap for a weapon you're looking at |
+| E | Defuse (hold, CT); pick up or swap for a weapon you're looking at |
 | 1–5, Q, mouse wheel | Primary, pistol, knife, grenades (press again to cycle), C4, last weapon |
 | G | Drop your weapon or the bomb |
 | B | Buy menu (keys 1–5 then 1–5, or click) |
@@ -45,7 +45,7 @@ When you are dead: left or right click cycles the player you spectate, and Space
 
 ## What's in it
 
-**Rules.** CS2 competitive (MR12, first to 13, halftime side swap, draw at 12–12) or a short match (first to 9). Freeze time, a 20-second buy window, 1:55 rounds, a 40-second bomb timer, a 3.2-second plant, and a 10-second defuse (5 seconds with a kit).
+**Rules.** CS2 competitive (MR12, first to 13, halftime side swap, draw at 12–12) or a short match (first to 9, draw at 8–8). Freeze time, a 20-second buy window, 1:55 rounds, a 40-second bomb timer, a 3.2-second plant, and a 10-second defuse (5 seconds with a kit).
 
 **Economy.** CS2 values: $800 start, $16,000 cap, round-win rewards by win type, the loss bonus ladder ($1,400 to $3,400), per-weapon kill rewards (SMGs $600, AWP $100, knife $1,500), $300 for planting and defusing, and $800 to the Terrorists when they lose with the bomb planted.
 
@@ -65,7 +65,7 @@ When you are dead: left or right click cycles the player you spectate, and Space
 - split a site from two routes
 - default: spread out for map control, then commit to the site with the fewest CTs spotted
 
-They also carry and fetch the bomb, throw smokes, flashes and molotovs from lineups before executing, plant, and play post-plant positions. CT bots hold standard positions, rotate when two or more attackers are seen at a site, and after a plant they regroup, retake and defuse. In combat, bots have a reaction time, aim error that settles over time, headshot chance and recoil control, all set by difficulty. They counter-strafe to shoot, burst at long range, spray up close, avoid shooting through teammates, turn toward noises and damage, and radio callouts to your team.
+They also carry and fetch the bomb, throw smokes, flashes and molotovs from lineups before executing, plant, and play post-plant positions. CT bots hold standard positions, throw molotovs, HEs, flashes and smokes at attackers pushing their site, rotate when two or more attackers are seen at a site, and after a plant they regroup, retake and defuse. In combat, bots have a reaction time, aim error that settles over time, headshot chance and recoil control, all set by difficulty. They counter-strafe to shoot, burst at long range, spray up close, avoid shooting through teammates, turn toward noises and damage, and radio callouts to your team.
 
 **Map.** A Mirage-inspired layout: T spawn, T ramp, palace, A ramp, Tetris, A site (triple, firebox, sandwich, ninja), jungle, stairs, connector, CT spawn, ticket booth, mid, top mid, window, short/catwalk, underpass, apartments, B short, kitchen, market, arch and B site with the van and bench. The radar in the top left rotates with you and shows the callout for your current area.
 
@@ -78,6 +78,7 @@ They also carry and fetch the bomb, throw smokes, flashes and molotovs from line
 - ammo, grenades and weapon slots
 - kill feed with headshot, wallbang, through-smoke and blind icons
 - radio chat and damage direction indicators
+- the name of the player under your crosshair, and hints for planting, defusing and picking up weapons
 - plant and defuse bars
 - round-end banner with the MVP
 - scoreboard with K/A/D, HS%, ADR, MVP stars and the round history
