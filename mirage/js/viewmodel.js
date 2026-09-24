@@ -7,7 +7,7 @@ const VM = (() => {
   let scene, holder, pivot, model = null, curId = null, curTeam = null;
   let flash, flashLight, flashT = 0;
   const shells = [];
-  const st = { draw: 1, drawDur: 1, reload: -1, reloadDur: 1, kick: 0, kickRot: 0, inspect: -1, bolt: -1, swing: -1, swingType: 0, nade: 0, throwT: -1, bob: 0, swayX: 0, swayY: 0, land: 0, plant: 0, hidden: false };
+  const st = { shell: -1, draw: 1, drawDur: 1, reload: -1, reloadDur: 1, kick: 0, kickRot: 0, inspect: -1, bolt: -1, swing: -1, swingType: 0, nade: 0, throwT: -1, bob: 0, swayX: 0, swayY: 0, land: 0, plant: 0, hidden: false };
 
   const BASE = {
     rifle: { p: [6.8, -6.2, -14.5], r: [0.03, 0.12, -0.05] },
@@ -87,7 +87,7 @@ const VM = (() => {
 
   V.deploy = (dur) => { st.draw = 0; st.drawDur = dur || 1; st.reload = -1; st.inspect = -1; st.throwT = -1; st.nade = 0; st.hidden = false; };
   V.shot = (w) => {
-    const k = w.type === 'sniper' ? 2.8 : w.id === 'deagle' ? 2.4 : w.type === 'pistol' ? 1.4 : 1;
+    const k = w.type === 'sniper' ? 2.8 : w.type === 'shotgun' ? 2.5 : w.id === 'deagle' ? 2.4 : w.type === 'pistol' ? 1.4 : 1;
     st.kick = Math.min(3, st.kick + k); st.kickRot = Math.min(0.4, st.kickRot + 0.05 * k);
     flashT = 0.05; flash.visible = !w.silenced;
     flash.material.rotation = Math.random() * Math.PI * 2;
@@ -95,10 +95,11 @@ const VM = (() => {
     flash.scale.set(s, s, 1);
     if (!w.silenced) flashLight.intensity = 2.2;
     st.inspect = -1;
-    if (w.bolt) st.bolt = 0;
+    if (w.bolt || w.id === 'nova') st.bolt = 0;
     if (model) ejectShell();
   };
   V.reload = (dur) => { st.reload = 0; st.reloadDur = dur; st.inspect = -1; };
+  V.shell = () => { st.shell = 0; st.inspect = -1; };
   V.inspect = () => { st.inspect = 0; };
   V.knife = (stab) => { st.swing = 0; st.swingType = stab ? 1 : Math.random() < 0.5 ? 2 : 3; };
   V.pin = () => { st.nade = 1; };
@@ -182,6 +183,12 @@ const VM = (() => {
         }
         if (t > 0.82 && t < 0.92) pz += 0.8 * Math.sin((t - 0.82) / 0.1 * Math.PI);
       }
+    }
+    // shotgun shell insert
+    if (st.shell >= 0) {
+      st.shell += dt / 0.45;
+      if (st.shell >= 1) st.shell = -1;
+      else { const a = Math.sin(st.shell * Math.PI); rz += 0.25 * a; py -= 0.8 * a; rx += 0.08 * a; }
     }
     // bolt action
     if (st.bolt >= 0) {

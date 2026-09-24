@@ -56,7 +56,7 @@ const Game = (() => {
   G.curInst = p => p.cur === 4 ? null : p.slots[p.cur];
   function weaponSpeed(p) {
     const w = G.curDef(p);
-    if (w.type === 'sniper' && p.ws.zoom > 0) return w.scopedSpeed;
+    if ((w.type === 'sniper' || w.scope) && p.ws.zoom > 0) return w.scopedSpeed;
     return w.speed || 250;
   }
   G.weaponSpeed = weaponSpeed;
@@ -365,6 +365,7 @@ const Game = (() => {
     const b = p.body;
     let v = b.ducked ? w.inCrouch : w.inStand;
     if (w.type === 'sniper' && p.ws.zoom === 0) v += w.noScope;
+    if (w.scope && p.ws.zoom > 0) v *= 0.55;
     const sp = Math.hypot(b.vx, b.vz), mx = w.speed;
     const mf = clampv((sp - mx * 0.34) / (mx * 0.66), 0, 1);
     v += w.inMove * mf * mf;
@@ -389,12 +390,22 @@ const Game = (() => {
     const f = dirFrom(yaw, pitch);
     const rgt = [Math.cos(yaw), 0, -Math.sin(yaw)];
     const up = [rgt[1] * f[2] - rgt[2] * f[1], rgt[2] * f[0] - rgt[0] * f[2], rgt[0] * f[1] - rgt[1] * f[0]];
-    const a1 = rnd() * Math.PI * 2, r1 = rnd() * inacc, a2 = rnd() * Math.PI * 2, r2 = rnd() * (w.spread / 1000);
-    const ox = Math.cos(a1) * r1 + Math.cos(a2) * r2, oy = Math.sin(a1) * r1 + Math.sin(a2) * r2;
-    let dx = f[0] + rgt[0] * ox + up[0] * oy, dy = f[1] + rgt[1] * ox + up[1] * oy, dz = f[2] + rgt[2] * ox + up[2] * oy;
-    const L = Math.hypot(dx, dy, dz); dx /= L; dy /= L; dz /= L;
-    return traceBullet(p, w, eye[0], eye[1], eye[2], dx, dy, dz);
+    const n = w.pellets || 1;
+    const ends = [];
+    // shotgun pellets share one inaccuracy offset, then spread in their own cone
+    const a1 = rnd() * Math.PI * 2, r1 = rnd() * inacc;
+    for (let k = 0; k < n; k++) {
+      const a2 = rnd() * Math.PI * 2, r2 = rnd() * (w.spread / 1000);
+      let ox = Math.cos(a1) * r1 + Math.cos(a2) * r2, oy = Math.sin(a1) * r1 + Math.sin(a2) * r2;
+      if (w.pellets) { const a3 = rnd() * Math.PI * 2, r3 = Math.sqrt(rnd()) * w.pelletSpread / 1000; ox += Math.cos(a3) * r3; oy += Math.sin(a3) * r3; }
+      let dx = f[0] + rgt[0] * ox + up[0] * oy, dy = f[1] + rgt[1] * ox + up[1] * oy, dz = f[2] + rgt[2] * ox + up[2] * oy;
+      const L = Math.hypot(dx, dy, dz); dx /= L; dy /= L; dz /= L;
+      ends.push(traceBullet(p, w, eye[0], eye[1], eye[2], dx, dy, dz));
+    }
+    lastEnds = ends;
+    return ends[0];
   }
+  let lastEnds = [];
 
   function traceBullet(p, w, ox, oy, oz, dx, dy, dz) {
     let mul = 1, travelled = 0, remaining = 8192, pens = 0;
@@ -768,15 +779,22 @@ const Game = (() => {
     }
     if (cmd.inspect) { cmd.inspect = false; if (now > ws.deployEnd && !ws.reloadEnd) { ws.inspectEnd = now + 3.2; G.emit('inspect', { p }); } }
     // reload
+    if (w.shells && ws.reloadEnd && cmd.fire && inst.ammo > 0 && !ws.trig) { ws.reloadEnd = 0; G.emit('reloadDone', { p, id }); }
     if (ws.reloadEnd && now >= ws.reloadEnd) {
-      const need = w.mag - inst.ammo, take = Math.min(need, inst.reserve);
-      inst.ammo += take; inst.reserve -= take; ws.reloadEnd = 0;
-      G.emit('reloadDone', { p, id });
+      if (w.shells) {
+        inst.ammo++; inst.reserve--;
+        if (inst.ammo < w.mag && inst.reserve > 0) { ws.reloadEnd = now + w.reload; G.emit('reload', { p, id, time: w.reload, shell: true }); }
+        else { ws.reloadEnd = 0; G.emit('reloadDone', { p, id }); }
+      } else {
+        const need = w.mag - inst.ammo, take = Math.min(need, inst.reserve);
+        inst.ammo += take; inst.reserve -= take; ws.reloadEnd = 0;
+        G.emit('reloadDone', { p, id });
+      }
     }
     const startReload = () => {
       if (!inst || !w.mag || ws.reloadEnd || inst.ammo >= w.mag || inst.reserve <= 0) return false;
-      ws.reloadEnd = now + w.reload; ws.zoom = 0; ws.inspectEnd = 0;
-      G.emit('reload', { p, id, time: w.reload });
+      ws.reloadEnd = now + w.reload + (w.shells ? 0.35 : 0); ws.zoom = 0; ws.inspectEnd = 0;
+      G.emit('reload', { p, id, time: w.reload, shell: !!w.shells });
       return true;
     };
     if (cmd.reload) { cmd.reload = false; startReload(); }
@@ -834,8 +852,8 @@ const Game = (() => {
       return;
     }
     // guns
-    if (w.type === 'sniper' && cmd.fire2 && !ws.trig2 && deployed && !ws.reloadEnd && now >= ws.boltEnd) {
-      ws.zoom = (ws.zoom + 1) % 3;
+    if ((w.type === 'sniper' || w.scope) && cmd.fire2 && !ws.trig2 && deployed && !ws.reloadEnd && now >= ws.boltEnd) {
+      ws.zoom = (ws.zoom + 1) % (w.zoom.length + 1);
       G.emit('zoom', { p, level: ws.zoom });
     }
     ws.trig2 = cmd.fire2;
@@ -854,9 +872,10 @@ const Game = (() => {
             ws.recoilIdx = Math.min(ws.recoilIdx + 1, (w.pat ? w.pat.length - 1 : 0));
             ws.fireInacc += w.inFire;
             ws.lastShot = now;
-            ws.nextFire = (now - ws.nextFire < w.cycle) ? ws.nextFire + w.cycle : now + w.cycle;
+            const cyc = w.scope && ws.zoom > 0 && w.cycleScoped ? w.cycleScoped : w.cycle;
+            ws.nextFire = (now - ws.nextFire < cyc) ? ws.nextFire + cyc : now + cyc;
             const e = G.eye(p);
-            G.emit('shot', { p, id, end, eye: e });
+            G.emit('shot', { p, id, end, ends: lastEnds, eye: e });
             G.noise(b.x, b.z, w.silenced ? 900 : 3200, p);
             if (!w.auto) break;
           }

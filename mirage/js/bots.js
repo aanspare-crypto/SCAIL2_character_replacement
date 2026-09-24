@@ -82,14 +82,18 @@ const Bots = (() => {
     const rifleCost = WEAPONS[rifle].price;
     const eco = teamAvg < 2300 && p.money < 3800 && !hasPrimary;
     if (!hasPrimary && !eco) {
+      const scoped = T ? 'sg553' : 'aug';
       if (p.ai.awper && p.money >= 4750 + 1000) buy('awp');
+      else if (p.money >= WEAPONS[scoped].price + 1400 && rnd() < 0.12) buy(scoped);
       else if (p.money >= rifleCost + 1000) buy(rifle);
       else if (p.money >= rifleCost + 650 && rnd() < 0.5) buy(rifle);
+      else if (p.money >= 2350 + 650 && rnd() < 0.25) buy('p90');
       else if (p.money >= (T ? 1800 : 2050) + 650) buy(T ? 'galil' : 'famas');
-      else if (p.money >= (T ? 1050 : 1250) + 650) buy(T ? 'mac10' : 'mp9');
+      else if (p.money >= 1700 && rnd() < 0.2) buy(rnd() < 0.5 ? 'nova' : 'ump45');
+      else if (p.money >= (T ? 1050 : 1250) + 650) buy(rnd() < 0.3 ? 'ump45' : T ? 'mac10' : 'mp9');
     }
     if (eco) {
-      if (p.money >= 1100 && rnd() < 0.45) buy(rnd() < 0.5 ? 'p250' : 'deagle');
+      if (p.money >= 1100 && rnd() < 0.45) buy(pick(['p250', 'deagle', T ? 'tec9' : 'fiveseven']));
       if (p.money >= 950 && rnd() < 0.4) buy('vest');
       return;
     }
@@ -462,14 +466,14 @@ const Bots = (() => {
       if (ws.zoom === 0 && dist > 350 && now >= ws.boltEnd && !ws.reloadEnd) { cmd.fire2 = !ws.trig2; }
     }
     // movement during a fight
-    const spray = w.type === 'smg' || w.type === 'pistol' || dist < 450;
+    const spray = w.type === 'smg' || w.type === 'pistol' || w.type === 'shotgun' || dist < 450;
     const canShoot = off < tol && now >= ai.pauseUntil && !ws.reloadEnd && now >= ws.deployEnd && !friendlyInLine(p, e);
     if (canShoot) {
-      if (spray && (w.type === 'smg' || w.type === 'pistol')) { cmd.side = ai.strafe * 0.6; cmd.fwd = 0; }
+      if (spray && (w.type === 'smg' || w.type === 'pistol' || w.type === 'shotgun')) { cmd.side = ai.strafe * 0.6; cmd.fwd = w.type === 'shotgun' && dist > 400 ? 0.8 : 0; }
       else stopMoving(p, cmd);
       if (ai.crouchSpray && dist < 900 && w.type !== 'sniper') cmd.duck = true;
       const sp = Math.hypot(p.body.vx, p.body.vz);
-      const accurate = w.type === 'smg' || w.type === 'pistol' || sp < w.speed * 0.36 || dist < 250;
+      const accurate = w.type === 'smg' || w.type === 'pistol' || (w.type === 'shotgun' && dist < 700) || sp < w.speed * 0.36 || dist < 250;
       if (accurate) {
         if (w.auto) {
           if (ai.burst <= 0) ai.burst = dist > 1500 ? 1 : dist > 800 ? 2 + Math.floor(rnd() * 3) : D.spray + Math.floor(rnd() * 6);

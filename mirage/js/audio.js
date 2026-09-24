@@ -102,6 +102,7 @@ const Sound = (() => {
     deagle: { crack: 1400, body: 800, bodyDur: 0.32, thump: [95, 38], tail: 1.0, gain: 1.1 },
     awp: { crack: 1200, body: 700, bodyDur: 0.45, thump: [75, 30], tail: 1.6, gain: 1.25 },
     ssg: { crack: 1900, body: 1000, bodyDur: 0.3, thump: [105, 45], tail: 1.1, gain: 1.0 },
+    shotgun: { crack: 1300, body: 650, bodyDur: 0.38, thump: [85, 32], tail: 1.2, gain: 1.2 },
   };
   S.shot = (snd, pos, silenced, local) => {
     if (!ctx) return;

@@ -193,7 +193,7 @@ const Characters = (() => {
     ch.gunId = id;
     if (ch.gun) ch.gunMount.remove(ch.gun.group);
     const w = WEAPONS[id];
-    const pose = !w ? 'knife' : w.type === 'pistol' ? 'pistol' : (w.type === 'rifle' || w.type === 'smg' || w.type === 'sniper') ? 'rifle' : 'knife';
+    const pose = !w ? 'knife' : w.type === 'pistol' ? 'pistol' : (w.type === 'rifle' || w.type === 'smg' || w.type === 'sniper' || w.type === 'shotgun') ? 'rifle' : 'knife';
     for (const k in ch.armSets) ch.armSets[k].visible = k === pose;
     ch.pose = pose;
     if (!id) { ch.gun = null; return; }

@@ -101,7 +101,7 @@
     mode = 'menu'; paused = false;
     $('pause').hidden = true; $('endscreen').hidden = true; $('hud').hidden = true; $('menu').hidden = false;
     HUD.openBuy(false); HUD.showScore(false);
-    $('scope').hidden = true;
+    $('scope').hidden = true; $('scope2').hidden = true;
     for (const [, ch] of models) Render.scene.remove(ch.root);
     models.clear();
     clearItems();
@@ -198,7 +198,7 @@
     if (!l || !l.alive) { mouse.dx = mouse.dy = 0; return; }
     const w = Game.curDef(l);
     let zoomMul = 1;
-    if (w.type === 'sniper' && l.ws.zoom > 0) zoomMul = Math.tan(fovFor(w.zoom[l.ws.zoom - 1]) * DEG / 2) / Math.tan(73.74 * DEG / 2);
+    if ((w.type === 'sniper' || w.scope) && l.ws.zoom > 0) zoomMul = Math.tan(fovFor(w.zoom[l.ws.zoom - 1]) * DEG / 2) / Math.tan(73.74 * DEG / 2);
     const k = S.sens * 0.022 * DEG * zoomMul;
     l.yaw -= mouse.dx * k;
     l.pitch = clampv(l.pitch - mouse.dy * k, -89 * DEG, 89 * DEG);
@@ -281,7 +281,7 @@
     for (const [, ch] of models) { ch.deathT = 0; ch.root.rotation.x = 0; ch.root.rotation.z = 0; }
     if (l) {
       VM.set(Game.curId(l), l.team); VM.deploy(0.6);
-      HUD.message(d.pistol ? 'Pistol round' : `Round ${d.round}`, 3);
+      HUD.message(l.slots[5] ? 'You have the bomb. Plant it at A or B' : d.pistol ? 'Pistol round' : `Round ${d.round}`, 3);
       Sound.ui('round');
     }
     lastMoney = l ? l.money : 0;
@@ -304,7 +304,8 @@
       punch.vp += (w.punch || 0.5) * 0.9 * DEG * 12;
       punch.vy += (Math.random() - 0.5) * (w.punch || 0.5) * 0.4 * DEG * 12;
     }
-    if (d.end && (!fp || Math.random() < 0.5)) FX.tracer(m[0], m[1], m[2], d.end[0], d.end[1], d.end[2]);
+    if (d.ends && d.ends.length > 1) { for (let i = 0; i < 3; i++) { const e = d.ends[i]; if (e) FX.tracer(m[0], m[1], m[2], e[0], e[1], e[2]); } }
+    else if (d.end && (!fp || Math.random() < 0.5)) FX.tracer(m[0], m[1], m[2], d.end[0], d.end[1], d.end[2]);
   });
   Game.on('impact', d => {
     FX.impact(d.x, d.y, d.z, d.nx, d.ny, d.nz, d.mat);
@@ -336,7 +337,7 @@
       setTimeout(() => { if (!l.alive) HUD.hideDeath(); }, 6000);
       spec.deathT = 0; spec.killer = d.killer; spec.target = null;
       HUD.openBuy(false);
-      $('scope').hidden = true;
+      $('scope').hidden = true; $('scope2').hidden = true;
     } else if (d.killer === l) Sound.ui('kill');
     const ch = models.get(d.victim.id);
     if (ch) { ch.deathDir = Math.random() < 0.6 ? -1 : 1; ch.deathSide = (Math.random() - 0.5) * 2; ch.deathT = 0; }
@@ -345,6 +346,7 @@
   Game.on('reload', d => {
     const fp = firstPersonOf(d.p);
     const pos = fp ? null : [d.p.body.x, d.p.body.y + 50, d.p.body.z];
+    if (d.shell) { Sound.mech('magin', pos, fp); if (fp) VM.shell(); return; }
     Sound.mech('magout', pos, fp);
     setTimeout(() => Sound.mech('magin', pos, fp), d.time * 550);
     setTimeout(() => Sound.mech('bolt', pos, fp), d.time * 830);
@@ -540,11 +542,13 @@
       cam.position.set(b.x, b.y + eyeHeight(b) + b.eyeLag, b.z);
       const sh = punch.shake;
       cam.rotation.set(l.pitch + (rc[1] * 0.45) * DEG + punch.p + (Math.random() - 0.5) * sh * 0.01, l.yaw - rc[0] * 0.45 * DEG + punch.y + (Math.random() - 0.5) * sh * 0.01, 0, 'YXZ');
-      if (w.type === 'sniper' && l.ws.zoom > 0) fovTarget = fovFor(w.zoom[l.ws.zoom - 1]);
-      showVM = !(w.type === 'sniper' && l.ws.zoom > 0);
-      $('scope').hidden = showVM;
+      const zoomed = (w.type === 'sniper' || w.scope) && l.ws.zoom > 0;
+      if (zoomed) fovTarget = fovFor(w.zoom[l.ws.zoom - 1]);
+      showVM = !zoomed;
+      $('scope').hidden = !(zoomed && w.type === 'sniper');
+      $('scope2').hidden = !(zoomed && w.scope);
     } else if (l) {
-      $('scope').hidden = true;
+      $('scope').hidden = true; $('scope2').hidden = true;
       spec.deathT += dt;
       if (spec.deathT < 2.2 && !spec.target) {
         // death cam: look at the killer from above the body
@@ -577,7 +581,7 @@
             cam.position.set(b.x, b.y + eyeHeight(b), b.z);
             cam.rotation.set(t.pitch, t.yaw, 0, 'YXZ');
             const w = Game.curDef(t);
-            if (w.type === 'sniper' && t.ws.zoom > 0) { fovTarget = fovFor(w.zoom[t.ws.zoom - 1]); $('scope').hidden = false; }
+            if ((w.type === 'sniper' || w.scope) && t.ws.zoom > 0) { fovTarget = fovFor(w.zoom[t.ws.zoom - 1]); $(w.scope ? 'scope2' : 'scope').hidden = false; }
             else showVM = true;
           }
         }
@@ -620,6 +624,7 @@
     let showVM = false;
     if (mode === 'play' && Game.players.length) {
       if (!paused) applyMouse();
+      if (HUD.buyOpen && !(local() && Game.canBuy(local()))) { HUD.openBuy(false); HUD.message('The buy time has expired', 2); }
       buildCmd();
       const n = Math.max(1, Math.ceil(dt / (1 / 120)));
       for (let i = 0; i < n; i++) { Bots.update(dt / n); Game.update(dt / n); }

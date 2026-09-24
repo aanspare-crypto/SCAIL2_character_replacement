@@ -27,6 +27,13 @@ const PATTERNS = {
   usp: curve(12, 8, 6, i => Math.sin(i * 2.1) * 0.3 * Math.min(1, i)),
   p250: curve(13, 9, 6, i => Math.sin(i * 1.9) * 0.4 * Math.min(1, i)),
   deagle: curve(7, 12, 3, i => Math.sin(i * 1.3) * 0.8 * Math.min(1, i)),
+  sg553: curve(30, 6.2, 4.6, i => i < 8 ? 0.06 * Math.sin(i * 1.9) : -Math.sin((i - 8) / 4.3) * 1.9),
+  aug: curve(30, 5.8, 4.6, i => i < 8 ? 0.05 * Math.sin(i * 2.2) : Math.sin((i - 8) / 4.6) * 1.7),
+  ump45: curve(25, 5.0, 4.4, i => Math.sin(i / 3.2) * 1.3 * Math.min(1, i / 5)),
+  p90: curve(50, 5.4, 6.0, i => Math.sin(i / 4) * 1.6 * Math.min(1, i / 6)),
+  tec9: curve(18, 10, 6, i => Math.sin(i * 2.4) * 0.5 * Math.min(1, i)),
+  fiveseven: curve(20, 8.5, 6, i => Math.sin(i * 2.2) * 0.35 * Math.min(1, i)),
+  shotgun: curve(8, 6, 1.2, () => 0),
   none: [[0, 0]],
 };
 
@@ -37,13 +44,21 @@ const WEAPONS = {
   usp: { name: 'USP-S', slot: 2, type: 'pistol', team: 'CT', price: 200, dmg: 35, ap: 0.505, rpm: 352, auto: false, mag: 12, reserve: 24, reload: 2.17, deploy: 1.0, speed: 240, rangeMod: 0.99, pen: 25, spread: 1.0, inStand: 4.0, inCrouch: 3.2, inMove: 12, inJump: 45, inFire: 50, recovery: 0.34, pattern: 'usp', punch: 1.5, kill: 300, snd: 'usp', silenced: true },
   p250: { name: 'P250', slot: 2, type: 'pistol', price: 300, dmg: 38, ap: 0.64, rpm: 400, auto: false, mag: 13, reserve: 26, reload: 2.2, deploy: 1.0, speed: 240, rangeMod: 0.85, pen: 30, spread: 2.0, inStand: 6.4, inCrouch: 5.0, inMove: 13.5, inJump: 45, inFire: 52, recovery: 0.34, pattern: 'p250', punch: 1.6, kill: 300, snd: 'p250' },
   deagle: { name: 'Desert Eagle', slot: 2, type: 'pistol', price: 700, dmg: 53, ap: 0.932, rpm: 267, auto: false, mag: 7, reserve: 35, reload: 2.2, deploy: 1.0, speed: 230, rangeMod: 0.81, pen: 50, spread: 2.0, inStand: 5.8, inCrouch: 4.4, inMove: 34, inJump: 110, inFire: 58, recovery: 0.42, pattern: 'deagle', punch: 3.0, kill: 300, snd: 'deagle' },
+  tec9: { name: 'Tec-9', slot: 2, type: 'pistol', team: 'T', price: 500, dmg: 33, ap: 0.906, rpm: 500, auto: false, mag: 18, reserve: 90, reload: 2.5, deploy: 1.0, speed: 240, rangeMod: 0.831, pen: 40, spread: 2.0, inStand: 8.6, inCrouch: 6.6, inMove: 14, inJump: 45, inFire: 62, recovery: 0.4, pattern: 'tec9', punch: 1.5, kill: 300, snd: 'p250' },
+  fiveseven: { name: 'Five-SeveN', slot: 2, type: 'pistol', team: 'CT', price: 500, dmg: 32, ap: 0.911, rpm: 400, auto: false, mag: 20, reserve: 100, reload: 2.2, deploy: 1.0, speed: 240, rangeMod: 0.81, pen: 40, spread: 2.0, inStand: 6.0, inCrouch: 4.6, inMove: 12, inJump: 45, inFire: 56, recovery: 0.35, pattern: 'fiveseven', punch: 1.4, kill: 300, snd: 'glock' },
+  nova: { name: 'Nova', slot: 1, type: 'shotgun', price: 1050, dmg: 26, pellets: 9, pelletSpread: 45, ap: 0.5, rpm: 68, auto: false, mag: 8, reserve: 32, reload: 0.55, shells: true, deploy: 1.0, speed: 220, rangeMod: 0.7, pen: 10, spread: 1.0, inStand: 9, inCrouch: 7, inMove: 40, inJump: 60, inFire: 30, recovery: 0.5, pattern: 'shotgun', punch: 2.4, kill: 900, snd: 'shotgun' },
+  xm1014: { name: 'XM1014', slot: 1, type: 'shotgun', price: 2000, dmg: 20, pellets: 6, pelletSpread: 42, ap: 0.8, rpm: 171, auto: true, mag: 7, reserve: 32, reload: 0.45, shells: true, deploy: 1.0, speed: 215, rangeMod: 0.7, pen: 10, spread: 1.0, inStand: 9, inCrouch: 7, inMove: 45, inJump: 60, inFire: 26, recovery: 0.45, pattern: 'shotgun', punch: 1.8, kill: 900, snd: 'shotgun' },
   mac10: { name: 'MAC-10', slot: 1, type: 'smg', team: 'T', price: 1050, dmg: 29, ap: 0.575, rpm: 800, auto: true, mag: 30, reserve: 100, reload: 2.57, deploy: 1.0, speed: 240, rangeMod: 0.8, pen: 28, spread: 0.6, inStand: 13, inCrouch: 9, inMove: 42, inJump: 60, inFire: 10, recovery: 0.35, pattern: 'mac10', punch: 0.5, kill: 600, snd: 'smg' },
   mp9: { name: 'MP9', slot: 1, type: 'smg', team: 'CT', price: 1250, dmg: 26, ap: 0.6, rpm: 857, auto: true, mag: 30, reserve: 120, reload: 2.13, deploy: 1.0, speed: 240, rangeMod: 0.87, pen: 28, spread: 0.6, inStand: 11, inCrouch: 8, inMove: 36, inJump: 60, inFire: 9, recovery: 0.32, pattern: 'mp9', punch: 0.45, kill: 600, snd: 'smg' },
+  ump45: { name: 'UMP-45', slot: 1, type: 'smg', price: 1200, dmg: 35, ap: 0.65, rpm: 666, auto: true, mag: 25, reserve: 100, reload: 3.5, deploy: 1.0, speed: 230, rangeMod: 0.75, pen: 30, spread: 0.6, inStand: 13, inCrouch: 9, inMove: 40, inJump: 60, inFire: 9, recovery: 0.35, pattern: 'ump45', punch: 0.55, kill: 600, snd: 'smg' },
+  p90: { name: 'P90', slot: 1, type: 'smg', price: 2350, dmg: 26, ap: 0.69, rpm: 857, auto: true, mag: 50, reserve: 100, reload: 3.3, deploy: 1.0, speed: 230, rangeMod: 0.86, pen: 30, spread: 0.6, inStand: 12, inCrouch: 9, inMove: 34, inJump: 60, inFire: 8, recovery: 0.35, pattern: 'p90', punch: 0.45, kill: 300, snd: 'smg' },
   galil: { name: 'Galil AR', slot: 1, type: 'rifle', team: 'T', price: 1800, dmg: 30, ap: 0.775, rpm: 666, auto: true, mag: 35, reserve: 90, reload: 2.95, deploy: 1.0, speed: 215, rangeMod: 0.98, pen: 55, spread: 0.6, inStand: 7.4, inCrouch: 5.6, inMove: 160, inJump: 130, inFire: 8.5, recovery: 0.40, pattern: 'galil', punch: 0.6, kill: 300, snd: 'galil' },
   famas: { name: 'FAMAS', slot: 1, type: 'rifle', team: 'CT', price: 2050, dmg: 30, ap: 0.7, rpm: 666, auto: true, mag: 25, reserve: 90, reload: 3.3, deploy: 1.0, speed: 220, rangeMod: 0.96, pen: 55, spread: 0.6, inStand: 6.4, inCrouch: 4.9, inMove: 150, inJump: 125, inFire: 8.0, recovery: 0.38, pattern: 'famas', punch: 0.55, kill: 300, snd: 'famas' },
   ak47: { name: 'AK-47', slot: 1, type: 'rifle', team: 'T', price: 2700, dmg: 36, ap: 0.775, rpm: 600, auto: true, mag: 30, reserve: 90, reload: 2.43, deploy: 1.0, speed: 215, rangeMod: 0.98, pen: 62, spread: 0.6, inStand: 6.4, inCrouch: 4.8, inMove: 175, inJump: 140, inFire: 7.8, recovery: 0.42, pattern: 'ak47', punch: 0.7, kill: 300, snd: 'ak47' },
   m4a4: { name: 'M4A4', slot: 1, type: 'rifle', team: 'CT', price: 3100, dmg: 33, ap: 0.7, rpm: 666, auto: true, mag: 30, reserve: 90, reload: 3.07, deploy: 1.0, speed: 225, rangeMod: 0.97, pen: 60, spread: 0.6, inStand: 5.0, inCrouch: 3.7, inMove: 140, inJump: 120, inFire: 7.0, recovery: 0.43, pattern: 'm4a4', punch: 0.6, kill: 300, snd: 'm4a4' },
   m4a1s: { name: 'M4A1-S', slot: 1, type: 'rifle', team: 'CT', price: 2900, dmg: 38, ap: 0.7, rpm: 600, auto: true, mag: 20, reserve: 80, reload: 3.07, deploy: 1.0, speed: 225, rangeMod: 0.99, pen: 60, spread: 0.6, inStand: 4.0, inCrouch: 3.0, inMove: 123, inJump: 113, inFire: 5.8, recovery: 0.39, pattern: 'm4a1s', punch: 0.5, kill: 300, snd: 'm4a1s', silenced: true },
+  sg553: { name: 'SG 553', slot: 1, type: 'rifle', team: 'T', price: 3000, dmg: 30, ap: 1.0, rpm: 666, scopedRpm: 545, auto: true, mag: 30, reserve: 90, reload: 2.8, deploy: 1.0, speed: 210, scopedSpeed: 150, rangeMod: 0.98, pen: 62, spread: 0.6, inStand: 6.2, inCrouch: 4.6, inMove: 150, inJump: 130, inFire: 7.4, recovery: 0.4, scope: true, zoom: [45], pattern: 'sg553', punch: 0.6, kill: 300, snd: 'galil' },
+  aug: { name: 'AUG', slot: 1, type: 'rifle', team: 'CT', price: 3300, dmg: 28, ap: 0.9, rpm: 666, scopedRpm: 600, auto: true, mag: 30, reserve: 90, reload: 3.8, deploy: 1.0, speed: 220, scopedSpeed: 150, rangeMod: 0.98, pen: 60, spread: 0.6, inStand: 5.2, inCrouch: 3.9, inMove: 140, inJump: 120, inFire: 7.0, recovery: 0.4, scope: true, zoom: [45], pattern: 'aug', punch: 0.55, kill: 300, snd: 'famas' },
   ssg08: { name: 'SSG 08', slot: 1, type: 'sniper', price: 1700, dmg: 88, ap: 0.85, rpm: 48, auto: false, mag: 10, reserve: 90, reload: 3.7, deploy: 1.0, speed: 230, scopedSpeed: 230, rangeMod: 0.98, pen: 70, spread: 0.3, inStand: 2.2, inCrouch: 1.6, inMove: 85, inJump: 50, inFire: 30, recovery: 0.5, noScope: 45, zoom: [40, 15], pattern: 'none', punch: 2.2, kill: 300, snd: 'ssg', bolt: true },
   awp: { name: 'AWP', slot: 1, type: 'sniper', price: 4750, dmg: 115, ap: 0.975, rpm: 41, auto: false, mag: 5, reserve: 30, reload: 3.67, deploy: 1.25, speed: 200, scopedSpeed: 100, rangeMod: 0.99, pen: 95, spread: 0.2, inStand: 1.6, inCrouch: 1.2, inMove: 172, inJump: 180, inFire: 60, recovery: 0.35, noScope: 90, zoom: [40, 10], pattern: 'none', punch: 3.0, kill: 100, snd: 'awp', bolt: true },
   he: { name: 'HE Grenade', slot: 4, type: 'grenade', price: 300, speed: 245, deploy: 0.6, kill: 300 },
@@ -58,6 +73,7 @@ for (const id in WEAPONS) {
   w.id = id;
   if (w.rpm) w.cycle = 60 / w.rpm;
   if (w.pattern) w.pat = PATTERNS[w.pattern];
+  if (w.scopedRpm) w.cycleScoped = 60 / w.scopedRpm;
 }
 
 const EQUIPMENT = {
@@ -68,9 +84,9 @@ const EQUIPMENT = {
 
 // Buy menu layout, CS2 style categories.
 const BUY_MENU = [
-  { name: 'Pistols', items: { T: ['glock', 'p250', 'deagle'], CT: ['usp', 'p250', 'deagle'] } },
-  { name: 'Mid-Tier', items: { T: ['mac10'], CT: ['mp9'] } },
-  { name: 'Rifles', items: { T: ['galil', 'ak47', 'ssg08', 'awp'], CT: ['famas', 'm4a4', 'm4a1s', 'ssg08', 'awp'] } },
+  { name: 'Pistols', items: { T: ['glock', 'tec9', 'p250', 'deagle'], CT: ['usp', 'fiveseven', 'p250', 'deagle'] } },
+  { name: 'Mid-Tier', items: { T: ['nova', 'xm1014', 'mac10', 'ump45', 'p90'], CT: ['nova', 'xm1014', 'mp9', 'ump45', 'p90'] } },
+  { name: 'Rifles', items: { T: ['galil', 'ak47', 'ssg08', 'sg553', 'awp'], CT: ['famas', 'm4a4', 'm4a1s', 'ssg08', 'aug', 'awp'] } },
   { name: 'Grenades', items: { T: ['flash', 'smoke', 'he', 'molotov'], CT: ['flash', 'smoke', 'he', 'incgrenade'] } },
   { name: 'Equipment', items: { T: ['vest', 'vesthelm'], CT: ['vest', 'vesthelm', 'defuser'] } },
 ];
@@ -225,6 +241,67 @@ const WeaponModels = (() => {
     g.add(mag);
     return { group: g, muzzle: [0, 0.6, -15], mag, grip: [0, -3.6, -2.8], fore: [0, -1.4, -7], eject: [0.9, 1.0, 3] };
   };
+  B.ump45 = () => {
+    const m = mats(), g = new THREE.Group();
+    box(g, 1.8, 3.0, 10, m.poly, 0, 0.3, 0);
+    box(g, 1.0, 0.45, 8, m.dark, 0, 2.0, -0.5);
+    box(g, 0.65, 0.65, 3, m.dark, 0, 0.8, -6.4);
+    box(g, 1.2, 3.4, 1.6, m.poly, 0, -2.4, 2.4, 0.25);
+    box(g, 1.6, 2.6, 7, m.poly, 0, 0.2, 8.2, -0.05);
+    const mag = new THREE.Group(); mag.position.set(0, -1.4, -2.6);
+    box(mag, 1.1, 5.2, 2.0, m.dark, 0, -2.5, -0.3, 0.1);
+    g.add(mag);
+    return { group: g, muzzle: [0, 0.8, -8], mag, grip: [0, -3.0, 2.6], fore: [0, -1.0, -5], eject: [0.9, 1.3, -1] };
+  };
+  B.p90 = () => {
+    const m = mats(), g = new THREE.Group();
+    box(g, 2.2, 3.4, 14, m.poly, 0, 0.2, 1.5);
+    box(g, 1.2, 1.1, 10, m.dark, 0, 2.3, 0.5);
+    box(g, 0.6, 0.6, 2.6, m.dark, 0, 0.8, -6.6);
+    box(g, 2.0, 1.6, 5, m.poly, 0, -1.8, -3.6);
+    box(g, 1.2, 3.6, 1.6, m.poly, 0, -2.2, -0.4, -0.1);
+    const mag = new THREE.Group(); mag.position.set(0, 2.2, 3);
+    box(mag, 1.6, 0.8, 9, m.tan, 0, 0.4, -2);
+    g.add(mag);
+    return { group: g, muzzle: [0, 0.8, -8], mag, grip: [0, -3.0, -0.2], fore: [0, -2.4, -4], eject: [0, -1.5, 2] };
+  };
+  function shotgun(pump) {
+    const m = mats(), g = new THREE.Group();
+    box(g, 1.7, 2.4, 9, m.metal, 0, 0.2, 0);
+    box(g, 0.8, 0.8, 18, m.dark, 0, 0.9, -13);
+    box(g, 0.7, 0.7, 15, m.dark, 0, -0.3, -11.5);
+    box(g, 1.6, 1.6, 6, pump ? m.poly : m.metal, 0, -0.4, -12);
+    box(g, 1.4, 2.8, 10, pump ? m.wood : m.poly, 0, -0.9, 9.6, -0.12);
+    box(g, 1.2, 3.2, 1.6, m.poly, 0, -2.3, 3.2, 0.3);
+    box(g, 0.3, 0.9, 0.4, m.dark, 0, 1.6, -21.5);
+    return { group: g, muzzle: [0, 0.9, -22.5], mag: null, grip: [0, -3.0, 3.4], fore: [0, -1.2, -12], eject: [0.9, 1.0, 0] };
+  }
+  B.nova = () => shotgun(true);
+  B.xm1014 = () => shotgun(false);
+  function scopedRifle(bodyMat, bull) {
+    const m = mats(), g = new THREE.Group();
+    if (bull) {
+      box(g, 2.0, 3.0, 17, bodyMat, 0, 0, 2);
+      box(g, 0.6, 0.6, 7, m.dark, 0, 0.6, -10.5);
+      box(g, 1.8, 3.6, 1.6, bodyMat, 0, -1.6, -4, -0.3);
+      box(g, 1.2, 3.2, 1.6, m.poly, 0, -2.5, 0.5, 0.25);
+    } else {
+      box(g, 1.7, 2.5, 12, bodyMat, 0, 0, 0);
+      box(g, 2.0, 2.2, 7, m.poly, 0, 0.1, -9.5);
+      box(g, 0.6, 0.6, 7, m.dark, 0, 0.5, -15.5);
+      box(g, 1.3, 3.6, 8, bodyMat, 0, -0.4, 10, -0.1);
+      box(g, 1.2, 3.4, 1.6, m.poly, 0, -2.6, 3.4, 0.35);
+    }
+    cyl(g, 0.8, 7, m.dark, 0, 3.0, -1, 12);
+    cyl(g, 1.05, 1.6, m.dark, 0, 3.0, -4.5, 12);
+    box(g, 0.6, 1.4, 1.4, m.dark, 0, 1.9, -1);
+    const mag = new THREE.Group(); mag.position.set(0, -1.4, bull ? 3.8 : -2.4);
+    box(mag, 1.1, 4.8, 2.1, m.metal, 0, -2.3, -0.3, 0.12);
+    g.add(mag);
+    return { group: g, muzzle: [0, 0.6, bull ? -14.4 : -19.4], mag, grip: bull ? [0, -3.2, 0.8] : [0, -3.2, 3.6], fore: bull ? [0, -2.9, -4.2] : [0, -1.0, -9.5], eject: [0.9, 1.0, 1] };
+  }
+  B.sg553 = () => scopedRifle(mats().tan, false);
+  B.aug = () => scopedRifle(mats().green, true);
   B.mp9 = () => {
     const m = mats(), g = new THREE.Group();
     box(g, 1.6, 2.6, 8, m.poly, 0, 0.2, 0);
@@ -269,6 +346,8 @@ const WeaponModels = (() => {
   B.usp = () => pistol(mats().dark, mats().poly, 7.5, true);
   B.p250 = () => pistol(mats().dark, mats().tan, 7.2, false);
   B.deagle = () => pistol(mats().silver, mats().silver, 9.8, false, true);
+  B.tec9 = () => pistol(mats().dark, mats().metal, 9, false);
+  B.fiveseven = () => pistol(mats().metal, mats().poly, 7.4, false);
   function sniper(bodyMat, big) {
     const m = mats(), g = new THREE.Group();
     const s = big ? 1.15 : 1;

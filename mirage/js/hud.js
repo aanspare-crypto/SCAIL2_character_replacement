@@ -283,7 +283,7 @@ const HUD = (() => {
       if (w.inStand !== undefined) gap = 3 + Math.min(40, G.inaccuracy(p, w) * 0.22);
       $('crosshair').style.setProperty('--gap', gap.toFixed(1) + 'px');
     }
-    $('crosshair').hidden = !p || !p.alive || (G.curDef(p).type === 'sniper' && p.ws.zoom > 0) || G.curDef(p).type === 'sniper';
+    $('crosshair').hidden = !p || !p.alive || G.curDef(p).type === 'sniper' || (G.curDef(p).scope && p.ws.zoom > 0);
     $('crossdot').hidden = !(p && p.alive && G.curDef(p).type === 'sniper' && p.ws.zoom === 0);
     // plant / defuse progress
     const prog = $('progress');
