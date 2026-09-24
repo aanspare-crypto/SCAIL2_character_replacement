@@ -266,11 +266,12 @@ const Tex = (() => {
     },
     smoke() {
       const c = canvas(128, 128), x = c.getContext('2d');
-      for (let i = 0; i < 26; i++) {
-        const px = rr(34, 94), py = rr(34, 94), r = rr(14, 34);
+      for (let i = 0; i < 34; i++) {
+        const a = rnd() * Math.PI * 2, rad = rnd() * 26;
+        const px = 64 + Math.cos(a) * rad, py = 64 + Math.sin(a) * rad, r = rr(18, 38);
         const g = x.createRadialGradient(px, py, 0, px, py, r);
-        const l = rr(170, 225);
-        g.addColorStop(0, `rgba(${l},${l},${l - 5},0.55)`); g.addColorStop(1, `rgba(${l},${l},${l},0)`);
+        const l = Math.floor(rr(225, 255));
+        g.addColorStop(0, `rgba(${l},${l},${l},0.5)`); g.addColorStop(0.6, `rgba(${l},${l},${l},0.22)`); g.addColorStop(1, `rgba(${l},${l},${l},0)`);
         x.fillStyle = g; x.fillRect(px - r, py - r, r * 2, r * 2);
       }
       return finish(c, false);

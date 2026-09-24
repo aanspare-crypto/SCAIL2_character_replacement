@@ -237,15 +237,15 @@ const FX = (() => {
   };
   // Smoke volume: bots use F.smokes for line-of-sight checks.
   F.smokeCloud = (x, y, z, dur) => {
-    const s = { x, y: y + 70, z, r: 150, t: 0, dur, particles: [] };
+    const s = { x, y: y + 70, z, r: 165, t: 0, dur, particles: [] };
     F.smokes.push(s);
-    for (let i = 0; i < 46; i++) {
-      const a = Math.random() * Math.PI * 2, rad = Math.sqrt(Math.random()) * 125, h = rr(8, 150);
+    for (let i = 0; i < 72; i++) {
+      const a = Math.random() * Math.PI * 2, rad = Math.sqrt(Math.random()) * 140, h = rr(10, 160);
       const tx = x + Math.cos(a) * rad, tz = z + Math.sin(a) * rad;
       const f = World.floorAt(tx, tz, y + 100);
-      const ty = Math.max(f + 20, y + h * (1 - rad / 250));
-      const l = rr(0.72, 0.86);
-      s.particles.push(systems.smoke.spawn({ x: x + rr(-10, 10), y: y + 20, z: z + rr(-10, 10), vx: (tx - x) * 1.6, vy: (ty - y) * 1.4, vz: (tz - z) * 1.6, drag: 1.8, life: dur + rr(-1, 1), s0: rr(60, 90), s1: rr(190, 260), ease: true, r: l, g: l, b: l * 0.98, a0: 0.85, a1: 0.8, fadeIn: 0.4, fadeOut: 2.5 }));
+      const ty = Math.max(f + 24, y + h * (1 - rad / 260));
+      const l = rr(0.8, 0.93) * (0.92 + 0.08 * (h / 160));
+      s.particles.push(systems.smoke.spawn({ x: x + rr(-10, 10), y: y + 20, z: z + rr(-10, 10), vx: (tx - x) * 1.7, vy: (ty - y) * 1.5, vz: (tz - z) * 1.7, drag: 1.9, life: dur + rr(-1, 1), s0: rr(70, 100), s1: rr(230, 300), ease: true, r: l, g: l, b: l * 0.985, a0: 1, a1: 0.95, fadeIn: 0.35, fadeOut: 2.5 }));
     }
     return s;
   };

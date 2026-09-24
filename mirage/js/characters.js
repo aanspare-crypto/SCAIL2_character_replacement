@@ -92,59 +92,93 @@ const Characters = (() => {
     knife: { R: [7.5, -12, -9], L: [-9, -16, -2] },
   };
 
+  function cylMesh(rTop, rBot, h, m, seg = 9, sz = 1) { const g = new THREE.CylinderGeometry(rTop, rBot, h, seg); if (sz !== 1) g.scale(1, 1, sz); return new THREE.Mesh(g, m); }
+  function sphMesh(r, m, sx = 1, sy = 1, sz = 1, ws = 12, hs = 9, cap = Math.PI) { const g = new THREE.SphereGeometry(r, ws, hs, 0, Math.PI * 2, 0, cap); g.scale(sx, sy, sz); return new THREE.Mesh(g, m); }
+  function rlimb(a, b, r0, r1, m) {
+    const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
+    const dir = vb.clone().sub(va); const len = dir.length();
+    const me = cylMesh(r1, r0, len + 1, m, 9);
+    me.position.copy(va).add(vb).multiplyScalar(0.5);
+    me.quaternion.setFromUnitVectors(Y, dir.normalize());
+    return me;
+  }
+  const at = (me, x, y, z) => { me.position.set(x, y, z); return me; };
+
   function build(team, variant) {
     const st = STYLE[team];
     const accent = st.accents[variant % st.accents.length];
     const root = new THREE.Group();
     root.rotation.order = 'YXZ';
     const pelvis = new THREE.Group(); pelvis.position.y = 36; root.add(pelvis);
-    const pm = boxMesh(14, 8, 9, lm(st.pants)); pelvis.add(pm);
-    const belt = boxMesh(14.6, 2, 9.6, lm('#1a1a1a')); belt.position.y = 3; pelvis.add(belt);
+    pelvis.add(at(boxMesh(13.5, 8, 8.6, lm(st.pants)), 0, 0, 0));
+    pelvis.add(at(boxMesh(14.2, 2.2, 9.2, lm('#1b1a18')), 0, 3, 0));
+    pelvis.add(at(boxMesh(2.2, 1.8, 0.6, lm('#8a8070', 30)), 0, 3, -4.7));
     const legs = [];
     for (const sx of [-1, 1]) {
-      const hip = new THREE.Group(); hip.position.set(sx * 3.8, -2, 0); pelvis.add(hip);
-      const thigh = boxMesh(6.4, 17, 7, lm(st.pants)); thigh.position.y = -8.5; hip.add(thigh);
+      const hip = new THREE.Group(); hip.position.set(sx * 3.9, -2, 0); pelvis.add(hip);
+      hip.add(at(cylMesh(3.9, 3.1, 17.5, lm(st.pants)), 0, -8.3, 0));
+      hip.add(at(boxMesh(1.8, 5.5, 4.8, lm(st.pouch)), sx * 3.6, -9, 0.3));
+      if (sx > 0) hip.add(at(boxMesh(2.2, 7, 4, lm('#1c1c1c')), 3.9, -5, 0.5));
       const knee = new THREE.Group(); knee.position.y = -17; hip.add(knee);
-      const shin = boxMesh(5.6, 15, 6.2, lm(st.pants)); shin.position.y = -7.5; knee.add(shin);
-      const pad = boxMesh(6, 4, 2, lm(team === 'CT' ? '#1a1a1a' : st.pouch)); pad.position.set(0, -1, -3.4); knee.add(pad);
-      const boot = boxMesh(6.2, 4.5, 10.5, lm(st.boots)); boot.position.set(0, -15.5, -1.8); knee.add(boot);
+      knee.add(at(cylMesh(3.0, 2.5, 14.5, lm(st.pants)), 0, -7.2, 0));
+      knee.add(at(sphMesh(2.5, lm(team === 'CT' ? '#161616' : st.pouch), 1.15, 1.25, 0.75), 0, -0.8, -2.5));
+      knee.add(at(cylMesh(2.9, 2.9, 3.2, lm(st.boots)), 0, -13.4, 0));
+      knee.add(at(boxMesh(5.8, 4.2, 8.6, lm(st.boots)), 0, -15.8, -1.1));
+      knee.add(at(sphMesh(2.9, lm(st.boots), 1, 0.72, 1.25), 0, -16.4, -4.6));
       legs.push({ hip, knee });
     }
     const spine = new THREE.Group(); spine.position.y = 3; pelvis.add(spine);
-    const torso = boxMesh(15.5, 20, 9.5, lm(st.jacket)); torso.position.y = 9.5; spine.add(torso);
-    const vest = boxMesh(16.5, 13.5, 11, lm(st.vest)); vest.position.y = 12; spine.add(vest);
-    for (let i = 0; i < 3; i++) { const p = boxMesh(4, 4.5, 2.2, lm(st.pouch)); p.position.set(-5 + i * 5, 6.5, -6.2); spine.add(p); }
-    const patch = boxMesh(3.5, 2.2, 0.4, lm(accent)); patch.position.set(8.4, 16, 0); patch.rotation.y = Math.PI / 2; spine.add(patch);
-    const neck = boxMesh(4.5, 3, 4.5, lm(st.skin)); neck.position.y = 21; spine.add(neck);
+    spine.add(at(cylMesh(6.9, 6.3, 9, lm(st.jacket), 12, 0.7), 0, 4.2, 0));
+    spine.add(at(boxMesh(15, 11.5, 9.2, lm(st.jacket)), 0, 13.6, 0));
+    for (const sx of [-1, 1]) spine.add(at(sphMesh(3.5, lm(st.jacket)), sx * 7.4, 17.6, 0));
+    if (team === 'CT') {
+      spine.add(at(boxMesh(15.6, 12.4, 11.2, lm(st.vest)), 0, 12.6, 0));
+      for (let i = 0; i < 3; i++) spine.add(at(boxMesh(4.2, 5, 2.4, lm(st.pouch)), -5 + i * 5, 8.8, -6.6));
+      spine.add(at(boxMesh(10, 3.2, 0.5, lm(accent)), 0, 16.3, -5.7));
+      spine.add(at(boxMesh(4.2, 3.4, 1.4, lm('#20242a')), -4.8, 14.2, -6.2));
+    } else {
+      spine.add(at(boxMesh(14.8, 7, 3.2, lm(st.vest)), 0, 8.8, -5.6));
+      for (let i = 0; i < 3; i++) spine.add(at(boxMesh(4.2, 5, 1.8, lm(st.pouch)), -5 + i * 5, 8.8, -7.6));
+      for (const sx of [-1, 1]) spine.add(at(boxMesh(2.2, 13, 11.6, lm(st.vest)), sx * 4.6, 14, 0));
+      if (variant % 2 === 0) spine.add(at(boxMesh(10, 12, 4.4, lm(st.pouch)), 0, 12, 6.6));
+    }
+    spine.add(at(boxMesh(3.6, 2.2, 0.4, lm(accent)), 8.3, 16, 0)).rotation.y = Math.PI / 2;
+    spine.add(at(cylMesh(2.4, 2.7, 3.4, lm(st.skin)), 0, 21, 0));
 
     // Aim frame at shoulder height; head, arms and gun rotate with pitch.
     const aim = new THREE.Group(); aim.position.y = 18; spine.add(aim);
     const head = new THREE.Group(); head.position.y = 4.5; aim.add(head);
-    const skull = boxMesh(8.2, 9.6, 9, lm(team === 'T' ? st.head : st.skin)); skull.position.y = 4.6; head.add(skull);
     if (team === 'CT') {
-      const helmet = boxMesh(9.4, 4.4, 10.2, lm(st.head, 20)); helmet.position.set(0, 8.4, 0.2); head.add(helmet);
-      const brim = boxMesh(9.6, 1.2, 2, lm(st.head, 20)); brim.position.set(0, 6.5, -4.8); head.add(brim);
-      const goggles = boxMesh(8.6, 2.2, 1.2, lm('#0b0b0b', 60)); goggles.position.set(0, 4.8, -4.6); head.add(goggles);
-      const mask = boxMesh(8.4, 3.2, 1, lm('#2a2a2a')); mask.position.set(0, 1.6, -4.6); head.add(mask);
+      head.add(at(sphMesh(4.3, lm(st.skin), 1, 1.12, 1.08), 0, 4.8, 0));
+      head.add(at(boxMesh(1, 1.9, 1.3, lm(st.skin)), 0, 4, -4.6));
+      head.add(at(sphMesh(4.95, lm(st.head, 20), 1, 0.95, 1.1, 14, 8, Math.PI * 0.56), 0, 5.4, 0.2));
+      head.add(at(boxMesh(9.6, 1, 1.6, lm(st.head, 20)), 0, 7.4, -4.6));
+      head.add(at(boxMesh(8, 1.9, 1.4, lm('#0a0a0a', 70)), 0, 5.4, -4.3));
+      for (const sx of [-1, 1]) head.add(at(sphMesh(1.6, lm('#222222')), sx * 4.7, 4.6, 0.3));
+      head.add(at(boxMesh(6.8, 2.8, 1, lm('#2a2a2a')), 0, 1.8, -4.2));
     } else {
-      const eyes = boxMesh(6.4, 1.8, 0.6, lm(st.skin)); eyes.position.set(0, 5.4, -4.6); head.add(eyes);
-      const scarf = boxMesh(9.4, 3.2, 9.6, lm(variant % 2 ? accent : '#c8b896')); scarf.position.set(0, 0.8, 0); head.add(scarf);
-      if (variant % 3 === 0) { const cap = boxMesh(8.8, 2.6, 9.6, lm('#2d2a26')); cap.position.set(0, 9.6, 0); head.add(cap); }
+      head.add(at(sphMesh(4.4, lm(st.head), 1, 1.12, 1.08), 0, 4.8, 0));
+      head.add(at(boxMesh(6, 1.7, 1.2, lm(st.skin)), 0, 5.6, -4));
+      head.add(at(boxMesh(1.4, 0.6, 1.3, lm('#121212')), -1.7, 5.6, -4.4));
+      head.add(at(boxMesh(1.4, 0.6, 1.3, lm('#121212')), 1.7, 5.6, -4.4));
+      head.add(at(cylMesh(4.6, 4.9, 3.4, lm(variant % 2 ? accent : '#c8b896'), 12), 0, 0.6, 0));
+      if (variant % 3 === 0) head.add(at(sphMesh(4.7, lm('#2d2a26'), 1, 0.8, 1.1, 12, 6, Math.PI * 0.5), 0, 7.2, 0));
     }
     const armSets = {};
     for (const pose in POSES) {
       const g = new THREE.Group(); aim.add(g); g.visible = false;
       for (const sx of [-1, 1]) {
-        const S = [sx * 9.2, 0, 0], H = sx > 0 ? POSES[pose].R : POSES[pose].L;
+        const S = [sx * 8.2, -0.4, 0], H = sx > 0 ? POSES[pose].R : POSES[pose].L;
         const [E, Hh] = ik(S, H, 12, 12.5, [sx * 1, -1.2, 0.6]);
-        g.add(limb(S, E, 5.2, lm(st.jacket)));
-        g.add(limb(E, Hh, 4.6, lm(st.jacket)));
-        const hand = boxMesh(3.6, 3.8, 4.2, lm(st.gloves)); hand.position.set(...Hh); g.add(hand);
+        g.add(rlimb(S, E, 2.9, 2.5, lm(st.jacket)));
+        g.add(at(sphMesh(2.5, lm(st.jacket)), ...E));
+        g.add(rlimb(E, Hh, 2.4, 2.0, lm(team === 'T' && variant % 2 ? st.skin : st.jacket)));
+        g.add(at(boxMesh(3.2, 3.6, 3.9, lm(st.gloves)), ...Hh));
       }
       armSets[pose] = g;
     }
     const gunMount = new THREE.Group(); aim.add(gunMount);
-    const backC4 = WeaponModels.build('c4').group; backC4.position.set(0, 12, 7.5); backC4.rotation.set(0.1, 0, Math.PI / 2); backC4.visible = false; spine.add(backC4);
+    const backC4 = WeaponModels.build('c4').group; backC4.position.set(0, 12, team === 'T' && variant % 2 === 0 ? 9.8 : 7.5); backC4.rotation.set(0.1, 0, Math.PI / 2); backC4.visible = false; spine.add(backC4);
     const kit = boxMesh(5, 4, 2.5, lm('#2a2f36')); kit.position.set(-6, -1, 5); kit.visible = false; pelvis.add(kit);
 
     root.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });

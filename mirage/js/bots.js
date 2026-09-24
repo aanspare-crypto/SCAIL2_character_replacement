@@ -13,8 +13,8 @@ const Bots = (() => {
   const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
 
   const DIFF = {
-    easy: { react: [0.5, 0.85], turn: 260, smooth: 5, err: 5.5, settle: 1.0, head: 0.08, comp: 0.25, fov: 0.45, tolMul: 1.8, spray: 5, hear: 0.6 },
-    normal: { react: [0.3, 0.52], turn: 420, smooth: 8, err: 3.4, settle: 0.6, head: 0.28, comp: 0.55, fov: 0.35, tolMul: 1.35, spray: 9, hear: 0.85 },
+    easy: { react: [0.45, 0.8], turn: 280, smooth: 5.5, err: 4.4, settle: 0.8, head: 0.1, comp: 0.3, fov: 0.45, tolMul: 1.6, spray: 6, hear: 0.6 },
+    normal: { react: [0.3, 0.5], turn: 420, smooth: 8, err: 3.2, settle: 0.5, head: 0.28, comp: 0.55, fov: 0.35, tolMul: 1.35, spray: 9, hear: 0.85 },
     hard: { react: [0.2, 0.34], turn: 620, smooth: 11, err: 2.2, settle: 0.4, head: 0.5, comp: 0.75, fov: 0.25, tolMul: 1.1, spray: 14, hear: 1 },
     expert: { react: [0.13, 0.22], turn: 900, smooth: 15, err: 1.4, settle: 0.26, head: 0.72, comp: 0.88, fov: 0.2, tolMul: 0.95, spray: 20, hear: 1 },
   };

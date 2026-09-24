@@ -685,7 +685,7 @@ const Game = (() => {
       const L2 = dx * dx + dy * dy + dz * dz || 1;
       const t = clampv(((sx - ax) * dx + (sy - ay) * dy + (sz - az) * dz) / L2, 0, 1);
       const px = ax + dx * t - sx, py = (ay + dy * t - sy) * 1.5, pz = az + dz * t - sz;
-      if (px * px + py * py + pz * pz < 150 * 150) return true;
+      if (px * px + py * py + pz * pz < 160 * 160) return true;
     }
     return false;
   };
