@@ -132,7 +132,7 @@ const Bots = (() => {
       const spots = DEFAULT_T.slice().sort(() => rnd() - 0.5);
       bots.forEach((p, i) => { p.ai.role = 'control'; p.ai.hold = spots[i % spots.length]; p.ai.route = null; });
     } else {
-      S.executeAt = S.style === 'rush' ? 0 : 999;
+      S.executeAt = 0;
       // main route for the bomb carrier, others split across routes
       const main = S.site === 'A' ? pick(['ramp', 'ramp', 'palace']) : pick(['apps', 'apps', 'short']);
       bots.forEach((p, i) => {
@@ -240,6 +240,21 @@ const Bots = (() => {
           const c = cts.find(p => p.ai.role === 'rotate'); if (c) say(c, `Rotating ${site}`);
         }
       }
+      // CTs use utility on attackers pushing their site
+      for (const site of ['A', 'B']) {
+        const recent = intel.CT.filter(q => now - q.t < 2.5 && ZONES[site].includes(q.zone));
+        if (!recent.length || (C.utilT && C.utilT[site] && now - C.utilT[site] < 6)) continue;
+        for (const p of cts) {
+          if (p.ai.zone !== site || (p.ai.target && now - p.ai.seenT < 0.5) || p.ai.nadeJob) continue;
+          const opts = CT_UTILITY[site].filter(u => p.nades.includes(u.type) && Math.hypot(u.to[0] - p.body.x, u.to[1] - p.body.z) < 1500);
+          if (!opts.length) continue;
+          const u = opts[0];
+          p.ai.nadeJob = { type: u.type, to: u.to, at: now + 0.2 + rnd() * 0.5 };
+          C.utilT = C.utilT || {}; C.utilT[site] = now;
+          say(p, { incgrenade: 'Molly out', he: 'HE out', flash: 'Flashing', smoke: 'Smoke out' }[u.type]);
+          break;
+        }
+      }
       // late round with no info: CTs push toward the enemy last seen
       if (clock > 95 && Game.alive('T').length <= 2) {
         const last = intel.CT[intel.CT.length - 1];
@@ -287,7 +302,6 @@ const Bots = (() => {
       if (ai.role === 'exec') {
         if (S.phase === 'execute') {
           if (!ai.entry || ai.entrySite !== S.site) {
-            const plantOwner = Game.players.find(q => q.slots[5] && q.alive);
             ai.entrySite = S.site;
             const c = siteCenter(S.site);
             ai.entry = near(c, 320);
@@ -564,7 +578,7 @@ const Bots = (() => {
           const off0 = Math.abs(angDiff(p.yaw, Math.atan2(-sx, -sz)));
           const still = Math.hypot(p.body.vx, p.body.vz) < 40;
           let rm = 1, em = 1;
-          if (still && off0 < 22 * DEG) { rm = 0.55; em = 0.5; } else if (!still) { rm = 1.2; em = 1.2; }
+          if (still && off0 < 30 * DEG) { rm = 0.5; em = 0.45; } else if (still) { rm = 0.8; em = 0.8; } else { rm = 1.35; em = 1.3; }
           const r = D.react[0] + rnd() * (D.react[1] - D.react[0]);
           ai.reactUntil = now + r * rm * (ai.lastSeen && ai.lastSeen.pid === seen.id && now - ai.lastSeen.t < 3 ? 0.4 : 1);
           ai.errY = (rnd() - 0.5) * 2 * D.err * DEG * em; ai.errP = (rnd() - 0.5) * 1.2 * D.err * DEG * em;

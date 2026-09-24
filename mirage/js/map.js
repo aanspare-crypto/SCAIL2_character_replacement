@@ -265,6 +265,22 @@ const LINEUPS = {
   ],
 };
 
+// Utility the CT side throws at chokepoints when attackers push a site.
+const CT_UTILITY = {
+  A: [
+    { type: 'incgrenade', to: [cx(41), cz(44.3)] },   // top of A ramp
+    { type: 'he', to: [cx(40), cz(53)] },             // palace exit
+    { type: 'flash', to: [cx(42), cz(44.5)] },
+    { type: 'smoke', to: [cx(43), cz(44.5)] },
+  ],
+  B: [
+    { type: 'incgrenade', to: [cx(15.2), cz(5.8)] },  // apps exit
+    { type: 'he', to: [cx(15.5), cz(13.5)] },         // B short
+    { type: 'flash', to: [cx(14.5), cz(6.5)] },
+    { type: 'smoke', to: [cx(16), cz(6)] },
+  ],
+};
+
 function buildGrid() {
   const grid = [];
   for (let r = 0; r < MAP_H; r++) grid.push(new Array(MAP_W).fill('#'));
@@ -275,5 +291,5 @@ function buildGrid() {
 }
 
 if (typeof module !== 'undefined') {
-  module.exports = { CELL, MAP_W, MAP_H, FLOOR_BOTTOM, LEGEND, PAINT, BOMBSITES, BUY_ZONES, SPAWNS, PROPS, SPOTS, LINEUPS, buildGrid, cx, cz };
+  module.exports = { CELL, MAP_W, MAP_H, FLOOR_BOTTOM, LEGEND, PAINT, BOMBSITES, BUY_ZONES, SPAWNS, PROPS, SPOTS, LINEUPS, CT_UTILITY, buildGrid, cx, cz };
 }

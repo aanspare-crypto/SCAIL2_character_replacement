@@ -3,7 +3,7 @@
 
 const Sound = (() => {
   const S = { enabled: false, volume: 0.7 };
-  let ctx, master, sfx, muffle, ui, noise, amb;
+  let ctx, master, sfx, muffle, ui, noise, amb, reverb, reverbSend;
   let lx = 0, ly = 0, lz = 0;
   let occlusion = null;
 
@@ -19,6 +19,24 @@ const Sound = (() => {
     muffle = ctx.createBiquadFilter(); muffle.type = 'lowpass'; muffle.frequency.value = 20000;
     muffle.connect(master);
     sfx = ctx.createGain(); sfx.connect(muffle);
+    // Synthetic outdoor reverb: a decaying noise impulse with early reflections off the buildings.
+    const irLen = Math.floor(ctx.sampleRate * 1.6);
+    const ir = ctx.createBuffer(2, irLen, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < irLen; i++) {
+        const t = i / ctx.sampleRate;
+        d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 2.6) * 0.5;
+      }
+      for (const [t, a] of [[0.045, 0.6], [0.083, 0.45], [0.13, 0.35], [0.19, 0.25], [0.27, 0.18]]) {
+        const k = Math.floor((t + ch * 0.007) * ctx.sampleRate);
+        for (let j = 0; j < 60; j++) d[k + j] += (Math.random() * 2 - 1) * a * (1 - j / 60);
+      }
+    }
+    reverb = ctx.createConvolver(); reverb.buffer = ir;
+    const rvLow = ctx.createBiquadFilter(); rvLow.type = 'lowpass'; rvLow.frequency.value = 3200;
+    reverbSend = ctx.createGain(); reverbSend.gain.value = 0.35;
+    reverbSend.connect(rvLow); rvLow.connect(reverb); reverb.connect(muffle);
     ui = ctx.createGain(); ui.connect(master);
     const len = ctx.sampleRate * 2;
     noise = ctx.createBuffer(1, len, ctx.sampleRate);
@@ -65,6 +83,11 @@ const Sound = (() => {
     if (p.positionX) { p.positionX.value = pos[0]; p.positionY.value = pos[1]; p.positionZ.value = pos[2]; }
     else p.setPosition(pos[0], pos[1], pos[2]);
     g.connect(lp); lp.connect(p); p.connect(sfx);
+    if (o.wet && reverbSend) {
+      // distant sounds are more reverberant
+      const w = ctx.createGain(); w.gain.value = o.wet * Math.min(1.6, 0.35 + dist / 1800);
+      lp.connect(w); w.connect(reverbSend);
+    }
     return g;
   }
 
@@ -116,7 +139,8 @@ const Sound = (() => {
       return;
     }
     const G = GUN[snd] || GUN.ak47;
-    const out = dest(pos, { gain: G.gain * (local ? 0.75 : 1), ref: 220, roll: 1.0, maxDist: 12000, air: 3200 }); if (!out) return;
+    const out = dest(pos, { gain: G.gain * (local ? 0.75 : 1), ref: 220, roll: 1.0, maxDist: 12000, air: 3200, wet: 0.5 }); if (!out) return;
+    if (!pos && reverbSend) { const w = ctx.createGain(); w.gain.value = 0.18; out.connect(w); w.connect(reverbSend); }
     const v = 0.92 + Math.random() * 0.16;
     nz(out, t, 0.09, 'bandpass', G.crack * v, 0.8, 1.2);
     nz(out, t, G.bodyDur, 'lowpass', G.body * v, 0.7, 1.0);
@@ -215,7 +239,7 @@ const Sound = (() => {
   };
   S.explosion = (pos, big) => {
     if (!ctx) return;
-    const out = dest(pos, { gain: big ? 1.6 : 1.1, ref: big ? 800 : 300, roll: 0.8, maxDist: 20000, air: 6000 }); if (!out) return;
+    const out = dest(pos, { gain: big ? 1.6 : 1.1, ref: big ? 800 : 300, roll: 0.8, maxDist: 20000, air: 6000, wet: 0.9 }); if (!out) return;
     const t = ctx.currentTime;
     nz(out, t, big ? 3.2 : 1.6, 'lowpass', big ? 700 : 1000, 0.6, 1.2, 0.005);
     nz(out, t, 0.25, 'bandpass', 1400, 0.6, 0.9);
