@@ -294,6 +294,22 @@ const HUD = (() => {
     const spec = $('spec');
     if (local && !local.alive && p && p !== local) { spec.hidden = false; spec.innerHTML = `Spectating <b class="${p.team.toLowerCase()}">${esc(p.name)}</b> · <kbd>Click</kbd> next player · <kbd>Space</kbd> ${view.third ? 'first person' : 'third person'}`; }
     else spec.hidden = true;
+    // target id and context hints
+    const tid = $('targetid');
+    if (p && p.alive && view.aimed) {
+      const a = view.aimed, mate = a.team === p.team;
+      tid.textContent = (mate ? 'Teammate: ' : 'Enemy: ') + a.name + (mate ? `  ${a.hp} HP` : '');
+      tid.className = mate ? a.team.toLowerCase() : 'enemy'; tid.hidden = false;
+    } else tid.hidden = true;
+    const hint = $('hint');
+    let ht = '';
+    if (local && local.alive && p === local) {
+      const B = G.bomb, b = local.body;
+      if (local.team === 'CT' && B.state === 'planted' && Math.hypot(b.x - B.x, b.z - B.z) < 90 && G.bomb.defuser !== local) ht = 'Hold <kbd>E</kbd> to defuse the bomb';
+      else if (G.curId(local) === 'c4' && World.bombsiteAt(b.x, b.z) && local.plantT === 0 && G.phase === 'live') ht = 'Hold <kbd>Mouse 1</kbd> to plant the bomb';
+      else if (view.item) ht = `Press <kbd>E</kbd> to pick up ${esc(WEAPONS[view.item.inst.id].name)}`;
+    }
+    hint.innerHTML = ht; hint.hidden = !ht;
     if (H.buyOpen) updateBuyMenu();
     if (H.scoreOpen) renderScoreboard();
   };

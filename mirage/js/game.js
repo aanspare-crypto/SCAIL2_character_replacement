@@ -313,6 +313,10 @@ const Game = (() => {
       const b = p.body;
       for (const it of G.items) {
         if (Math.abs(it.x - b.x) > 40 || Math.abs(it.z - b.z) > 40 || it.y < b.y - 30 || it.y > b.y + 72) continue;
+        if (it.kind === 'kit') {
+          if (p.team !== 'CT' || p.defuser) continue;
+          p.defuser = true; removeItem(it); G.emit('pickup', { p, id: 'defuser' }); break;
+        }
         if (it.kind === 'c4') {
           if (p.team !== 'T') continue;
           p.slots[5] = it.inst; G.bomb.state = 'carried'; G.bomb.carrier = p; G.bomb.item = null;
@@ -497,6 +501,7 @@ const Game = (() => {
     if (v.slots[1]) { drop(v.slots[1], 'weapon'); v.slots[1] = null; }
     else if (v.slots[2]) { drop(v.slots[2], 'weapon'); v.slots[2] = null; }
     if (v.nades.length) { drop({ id: v.nades[v.nades.length - 1] }, 'weapon'); }
+    if (v.defuser) { drop({ id: 'defuser' }, 'kit'); v.defuser = false; }
     v.nades = [];
     if (v.slots[5]) {
       const it = drop(v.slots[5], 'c4'); v.slots[5] = null;

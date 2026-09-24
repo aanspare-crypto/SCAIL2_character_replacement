@@ -437,8 +437,13 @@
   Game.on('inspect', d => { if (firstPersonOf(d.p)) VM.inspect(); });
   Game.on('zoom', d => { if (d.p === local()) Sound.mech('scope', null, true); });
   Game.on('itemSpawn', it => {
-    const g = WeaponModels.build(it.kind === 'c4' ? 'c4' : it.inst.id).group;
-    g.rotation.set(0, it.yaw, it.kind === 'c4' ? 0 : Math.PI / 2);
+    let g;
+    if (it.kind === 'kit') {
+      g = new THREE.Group();
+      const m = new THREE.Mesh(new THREE.BoxGeometry(7, 2.5, 5), new THREE.MeshPhongMaterial({ color: Render.C('#2a3440'), shininess: 30 }));
+      m.castShadow = true; g.add(m);
+    } else g = WeaponModels.build(it.kind === 'c4' ? 'c4' : it.inst.id).group;
+    g.rotation.set(0, it.yaw, it.kind === 'weapon' ? Math.PI / 2 : 0);
     g.position.set(it.x, it.y, it.z);
     Render.scene.add(g);
     itemModels.set(it.uid, g);
@@ -484,7 +489,7 @@
     }
     for (const it of Game.items) {
       const g = itemModels.get(it.uid);
-      if (g) { g.position.set(it.x, it.y + (it.kind === 'c4' ? 1 : 1.2), it.z); if (!it.rest) g.rotation.x += dt * 6; }
+      if (g) { g.position.set(it.x, it.y + (it.kind === 'weapon' ? 1.2 : 1), it.z); if (!it.rest) g.rotation.x += dt * 6; }
     }
     const live = new Set(Game.nades);
     for (const [n, g] of nadeModels) {
@@ -615,6 +620,35 @@
     $('hurtfx').style.opacity = Math.min(1, hurtFlash + low).toFixed(3);
   }
 
+  // What the crosshair is on: a player (for the name label) or a weapon on the floor.
+  let aimT = 0, aimCache = { player: null, item: null };
+  function aimedAt(p) {
+    aimT -= 1;
+    if (aimT > 0) return aimCache;
+    aimT = 4;
+    aimCache = { player: null, item: null };
+    if (!p || !p.alive) return aimCache;
+    const e = Game.eye(p), d = Game.dirFrom(p.yaw, p.pitch);
+    const wh = World.raycast(e[0], e[1], e[2], d[0], d[1], d[2], 3000);
+    const maxT = wh ? wh.t : 3000;
+    let best = null, bt = maxT;
+    for (const q of Game.players) {
+      if (q === p || !q.alive) continue;
+      const h = hitTestPlayer(q, e[0], e[1], e[2], d[0], d[1], d[2], bt);
+      if (h && h.t < bt) { bt = h.t; best = q; }
+    }
+    if (best && !Game.smokeBlocks(e[0], e[1], e[2], best.body.x, best.body.y + 50, best.body.z)) aimCache.player = best;
+    if (p === local()) {
+      for (const it of Game.items) {
+        if (it.kind !== 'weapon' || WEAPONS[it.inst.id].type === 'grenade') continue;
+        const vx = it.x - e[0], vy = it.y - e[1], vz = it.z - e[2], dist = Math.hypot(vx, vy, vz);
+        if (dist > 110 || (vx * d[0] + vy * d[1] + vz * d[2]) / dist < 0.9) continue;
+        aimCache.item = it; break;
+      }
+    }
+    return aimCache;
+  }
+
   // ---------- loop ----------
   let last = performance.now();
   let started = false;
@@ -657,7 +691,8 @@
         VM.update({ dt, speed: Math.hypot(b.vx, b.vz), onGround: b.onGround, mdx: vt === local() ? lastMouse.dx : 0, mdy: vt === local() ? lastMouse.dy : 0, duck: b.ducked, planting: vt.plantT > 0, defusing: Game.bomb.defuser === vt, visible: showVM });
       } else VM.update({ dt, speed: 0, onGround: true, mdx: 0, mdy: 0, visible: false });
       lastMouse.dx = lastMouse.dy = 0;
-      HUD.update({ p: vt, x: cam.position.x, z: cam.position.z, yaw: vt ? vt.yaw : cam.rotation.y, third: spec.third }, dt);
+      const aim = aimedAt(vt);
+      HUD.update({ p: vt, x: cam.position.x, z: cam.position.z, yaw: vt ? vt.yaw : cam.rotation.y, third: spec.third, aimed: aim.player, item: aim.item }, dt);
       overlays(dt);
       Sound.setListener(cam.position.x, cam.position.y, cam.position.z, cam.rotation.y, cam.rotation.x);
     } else {
