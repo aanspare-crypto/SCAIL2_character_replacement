@@ -392,6 +392,7 @@
     if (fp) VM.thrown();
     const g = WeaponModels.build(d.n.id).group;
     g.scale.setScalar(1.1);
+    setCast(g, Render.quality === 'high');
     Render.scene.add(g);
     nadeModels.set(d.n, g);
   });
@@ -471,6 +472,7 @@
     } else g = WeaponModels.build(it.kind === 'c4' ? 'c4' : it.inst.id).group;
     g.rotation.set(0, it.yaw, it.kind === 'weapon' ? Math.PI / 2 : 0);
     g.position.set(it.x, it.y, it.z);
+    setCast(g, Render.quality === 'high');
     Render.scene.add(g);
     itemModels.set(it.uid, g);
   });
@@ -509,16 +511,26 @@
       else if (o.userData.mat) { o.material = o.userData.mat; o.userData.mat = null; }
     });
   }
+  // Only High quality re-renders shadows every frame; below that, moving things must not bake into the static shadow map.
+  function setCast(obj, on) {
+    const key = on ? 1 : 0;
+    if (obj.userData.cast === key && !obj.userData.dirty) return;
+    obj.userData.cast = key; obj.userData.dirty = false;
+    obj.traverse(o => { if (o.isMesh) o.castShadow = on; });
+  }
   // ---------- per-frame model sync ----------
   function syncModels(dt) {
     const vt = viewTarget();
+    const dynShadows = Render.quality === 'high';
     for (const p of Game.players) {
       const ch = models.get(p.id);
       if (!ch) continue;
+      if (ch.gunId !== (p.alive ? Game.curId(p) : null)) ch.root.userData.dirty = true;
       const b = p.body;
       ch.root.position.set(b.x, b.y, b.z);
       if (p.alive) ch.root.rotation.y = p.yaw;
       Characters.setWeapon(ch, p.alive ? Game.curId(p) : null);
+      setCast(ch.root, dynShadows);
       ch.backC4.visible = !!p.slots[5] && Game.curId(p) !== 'c4';
       ch.kit.visible = p.defuser && p.alive;
       Characters.animate(ch, { dt, speed: Math.hypot(b.vx, b.vz), duck: b.duck, onGround: b.onGround, pitch: p.pitch, alive: p.alive });
@@ -528,6 +540,7 @@
     }
     for (const it of Game.items) {
       const g = itemModels.get(it.uid);
+      if (g) setCast(g, dynShadows);
       if (g) { g.position.set(it.x, it.y + (it.kind === 'weapon' ? 1.2 : 1), it.z); if (!it.rest) g.rotation.x += dt * 6; }
     }
     const live = new Set(Game.nades);
