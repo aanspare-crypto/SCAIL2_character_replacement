@@ -1,3 +1,12 @@
+# Games
+
+This repository holds two browser games built with Three.js:
+
+- **[Mirage 5v5](mirage/README.md)**: a Counter-Strike 2–style bomb defusal shooter on a Mirage-inspired map, with you and four bots against five bots. Open `mirage/index.html`.
+- **Vesper-9**: a first-person horror game on a space station, described below. Open `index.html`.
+
+---
+
 # Vesper-9
 
 A first-person horror game on a failing orbital relay station, built with Three.js in a single `index.html`.
