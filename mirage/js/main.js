@@ -323,6 +323,12 @@
     Sound.flesh(null, d.head, d.helmet);
   });
   Game.on('hurt', d => {
+    const ch = models.get(d.v.id);
+    if (ch && d.dir) {
+      // flinch away from the shot
+      const fx = -Math.sin(d.v.yaw), fz = -Math.cos(d.v.yaw);
+      ch.hitT = 0.25; ch.hitDir = (d.dir[0] * fx + d.dir[2] * fz) > 0 ? -1 : 1; ch.hitSide = Math.random() < 0.5 ? -1 : 1;
+    }
     const l = local();
     if (d.v === l) {
       Sound.hurt();
@@ -349,7 +355,18 @@
       else HUD.moneyPop(-300);
     }
     const ch = models.get(d.victim.id);
-    if (ch) { ch.deathDir = Math.random() < 0.6 ? -1 : 1; ch.deathSide = (Math.random() - 0.5) * 2; ch.deathT = 0; }
+    if (ch) {
+      // fall away from the killer when we know where the shot came from
+      const v = d.victim, k = d.killer;
+      let dir = Math.random() < 0.6 ? -1 : 1;
+      if (k && k !== v) {
+        const fx = -Math.sin(v.yaw), fz = -Math.cos(v.yaw);
+        dir = ((v.body.x - k.body.x) * fx + (v.body.z - k.body.z) * fz) > 0 ? -1 : 1;
+      }
+      ch.deathDir = dir; ch.deathSide = (Math.random() - 0.5) * 2; ch.deathT = 0;
+      const bx = v.body.x + Math.sin(v.yaw) * 32 * dir, bz = v.body.z + Math.cos(v.yaw) * 32 * dir, by = v.body.y;
+      setTimeout(() => { if (!v.alive) FX.decal('pool', bx, World.floorAt(bx, bz, by + 30) + 0.3, bz, 0, 1, 0, 0.7 + Math.random() * 0.5); }, 700);
+    }
     if (spec.target === d.victim) setTimeout(() => { if (spec.target === d.victim) nextSpectate(1); }, 1500);
   });
   Game.on('reload', d => {

@@ -312,6 +312,16 @@ const Tex = (() => {
       }
       return finish(c, false);
     },
+    bloodpool() {
+      const c = canvas(128, 128), x = c.getContext('2d');
+      for (let i = 0; i < 9; i++) {
+        const px = 64 + rr(-22, 22), py = 64 + rr(-22, 22), r = rr(16, 34);
+        const g = x.createRadialGradient(px, py, 0, px, py, r);
+        g.addColorStop(0, 'rgba(70,4,4,0.9)'); g.addColorStop(0.7, 'rgba(90,8,8,0.75)'); g.addColorStop(1, 'rgba(90,8,8,0)');
+        x.fillStyle = g; x.beginPath(); x.arc(px, py, r, 0, 7); x.fill();
+      }
+      return finish(c, false);
+    },
     scorch() {
       const c = canvas(128, 128), x = c.getContext('2d');
       const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);

@@ -201,12 +201,18 @@ const Characters = (() => {
   function animate(ch, s) {
     const dt = s.dt;
     if (!s.alive) {
-      ch.deathT = Math.min(1, ch.deathT + dt * 2.6);
-      const e = ch.deathT * ch.deathT * (3 - 2 * ch.deathT);
-      ch.root.rotation.x = ch.deathDir * (Math.PI / 2 - 0.05) * e;
-      ch.root.rotation.z = ch.deathSide * 0.4 * e;
-      ch.aim.rotation.x = 0.4 * e;
-      for (const L of ch.legs) { L.hip.rotation.x *= 0.9; L.knee.rotation.x = 0.3 * e; }
+      // legs buckle first, then the body tips over and accelerates into the ground
+      ch.deathT = Math.min(1, ch.deathT + dt * 1.25);
+      const t = ch.deathT;
+      const b0 = Math.min(1, t / 0.35), bk = b0 * b0 * (3 - 2 * b0);
+      const f0 = Math.max(0, (t - 0.18) / 0.82), fk = Math.min(1, f0 * f0);
+      for (let i = 0; i < 2; i++) { const L = ch.legs[i]; L.hip.rotation.x = -0.8 * bk * (i ? 0.7 : 1); L.knee.rotation.x = 1.4 * bk * (i ? 1.15 : 0.85); }
+      ch.pelvis.position.y = 36 - 12 * bk * (1 - fk) - 4 * fk;
+      ch.spine.rotation.x = (ch.deathDir > 0 ? -0.25 : 0.35) * bk;
+      ch.aim.rotation.x = (ch.deathDir > 0 ? -0.5 : 0.8) * bk;
+      ch.root.rotation.x = ch.deathDir * (Math.PI / 2 - 0.08) * fk;
+      ch.root.rotation.z = ch.deathSide * 0.35 * fk;
+      ch.root.position.y += 5 * fk;
       return;
     }
     ch.deathT = 0; ch.root.rotation.x = 0; ch.root.rotation.z = 0;
@@ -224,6 +230,14 @@ const Characters = (() => {
     }
     ch.pelvis.position.y = 36 - 18 * duck + Math.abs(Math.sin(ch.phase)) * 1.2 * amp * (1 - duck);
     ch.spine.rotation.x = -0.12 * duck - 0.06 * amp;
+    ch.spine.rotation.z = 0;
+    // flinch when hit
+    if (ch.hitT > 0) {
+      ch.hitT = Math.max(0, ch.hitT - dt);
+      const k = ch.hitT / 0.25;
+      ch.spine.rotation.x += 0.28 * k * ch.hitDir;
+      ch.spine.rotation.z = 0.12 * k * ch.hitSide;
+    }
     ch.aim.rotation.x = Math.max(-1.2, Math.min(1.2, s.pitch)) - ch.spine.rotation.x;
     ch.spine.rotation.y = 0;
   }

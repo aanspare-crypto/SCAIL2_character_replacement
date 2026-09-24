@@ -180,6 +180,7 @@ const FX = (() => {
     decalPool('hole', Tex.get('hole'), 180, 4);
     decalPool('blood', Tex.get('blood'), 40, 26);
     decalPool('scorch', Tex.get('scorch'), 12, 150);
+    decalPool('pool', Tex.get('bloodpool'), 12, 64);
     initTracers();
     initLights();
   };
