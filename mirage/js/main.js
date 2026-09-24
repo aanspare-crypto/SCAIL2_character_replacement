@@ -68,6 +68,7 @@
   $('voice').addEventListener('change', e => { S.voice = e.target.value; save(); Sound.voice = S.voice === '1'; });
   $('ff').addEventListener('change', e => { S.ff = e.target.value; save(); });
   syncMenu();
+  if (window.matchMedia && !window.matchMedia('(pointer: fine)').matches) $('playnote').textContent = 'This game needs a keyboard and mouse.';
 
   function lockPointer() {
     const c = $('view');
@@ -284,7 +285,6 @@
       HUD.message(l.slots[5] ? 'You have the bomb. Plant it at A or B' : d.pistol ? 'Pistol round' : `Round ${d.round}`, 3);
       Sound.ui('round');
     }
-    lastMoney = l ? l.money : 0;
   });
   Game.on('freezeEnd', () => { const l = local(); if (l && l.alive) HUD.message(l.team === 'T' ? 'Plant the bomb or eliminate the enemy team' : 'Defend the bombsites', 3); if (HUD.buyOpen && !Game.canBuy(l)) HUD.openBuy(false); });
 
@@ -338,7 +338,11 @@
       spec.deathT = 0; spec.killer = d.killer; spec.target = null;
       HUD.openBuy(false);
       $('scope').hidden = true; $('scope2').hidden = true;
-    } else if (d.killer === l) Sound.ui('kill');
+    } else if (d.killer === l) {
+      Sound.ui('kill');
+      if (d.victim.team !== l.team) HUD.moneyPop(WEAPONS[d.weapon] ? (WEAPONS[d.weapon].kill || 300) : 300);
+      else HUD.moneyPop(-300);
+    }
     const ch = models.get(d.victim.id);
     if (ch) { ch.deathDir = Math.random() < 0.6 ? -1 : 1; ch.deathSide = (Math.random() - 0.5) * 2; ch.deathT = 0; }
     if (spec.target === d.victim) setTimeout(() => { if (spec.target === d.victim) nextSpectate(1); }, 1500);
@@ -380,6 +384,7 @@
   Game.on('keypad', d => Sound.keypad([d.p.body.x, d.p.body.y + 30, d.p.body.z]));
   Game.on('plantStart', d => { if (d.p === local()) HUD.message('Planting…', 1.5); });
   Game.on('planted', d => {
+    if (d.p === local()) HUD.moneyPop(300);
     Sound.say('Bomb has been planted');
     HUD.message('The bomb has been planted', 3, 'warn');
     placeBomb(d.x, d.y, d.z);
@@ -387,14 +392,13 @@
   Game.on('beep', d => { Sound.beep([d.x, d.y + 4, d.z], d.hi); if (bombGlow) bombGlow.userData.t = 0.12; });
   Game.on('defuseStart', d => { if (d.p === local()) HUD.message(d.p.defuser ? 'Defusing with kit (5 s)' : 'Defusing (10 s)', 2); Sound.defuseTick([Game.bomb.x, Game.bomb.y, Game.bomb.z]); });
   Game.on('defuseTick', b => Sound.defuseTick([b.x, b.y, b.z]));
-  Game.on('defused', () => { Sound.say('Bomb has been defused'); });
+  Game.on('defused', d => { Sound.say('Bomb has been defused'); if (d.p === local()) HUD.moneyPop(300); });
   Game.on('explode', d => {
     FX.explosion(d.x, d.y, d.z, true); Sound.explosion([d.x, d.y, d.z], true);
     if (bombModel) bombModel.visible = false;
     shakeFrom(d.x, d.y, d.z, 3500, 14);
   });
   const REASON = { elim: 'Enemy team eliminated', bomb: 'Target bombed', defuse: 'Bomb defused', time: 'Target saved' };
-  let lastMoney = 0;
   Game.on('roundEnd', d => {
     const l = local();
     HUD.hideDeath();
@@ -404,9 +408,7 @@
     Sound.say(d.winner === 'CT' ? 'Counter-terrorists win' : 'Terrorists win');
     if (l) {
       Sound.ui(l.team === d.winner ? 'win' : 'lose');
-      const diff = l.money - lastMoney;
-      if (diff) HUD.moneyPop(diff);
-      lastMoney = l.money;
+      if (l.roundReward) HUD.moneyPop(l.roundReward);
     }
   });
   Game.on('matchEnd', d => {
@@ -616,10 +618,27 @@
   // ---------- loop ----------
   let last = performance.now();
   let started = false;
+  // Drop the graphics preset once if the frame rate is poor.
+  const perf = { t: 0, frames: 0, sum: 0, done: false };
+  function watchPerf(dt) {
+    if (perf.done || mode !== 'play' || paused) return;
+    perf.t += dt; perf.frames++; perf.sum += dt;
+    if (perf.t < 2) { perf.frames = 0; perf.sum = 0; return; }
+    if (perf.t < 6) return;
+    const avg = perf.sum / Math.max(1, perf.frames);
+    perf.t = 0; perf.frames = 0; perf.sum = 0;
+    if (avg > 1 / 42 && Render.quality !== 'low') {
+      const q = Render.quality === 'high' ? 'medium' : 'low';
+      Render.setQuality(q); S.quality = q; syncMenu();
+      HUD.message(`Graphics set to ${q[0].toUpperCase() + q.slice(1)} to keep the frame rate up`, 3.5);
+      if (q === 'low') perf.done = true;
+    } else perf.done = true;
+  }
   function frame(now) {
     requestAnimationFrame(frame);
     const dt = Math.min(0.05, Math.max(0.0001, (now - last) / 1000));
     last = now;
+    watchPerf(dt);
     impactBudget = Math.max(0, impactBudget - dt * 60);
     let showVM = false;
     if (mode === 'play' && Game.players.length) {

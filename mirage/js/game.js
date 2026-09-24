@@ -176,6 +176,7 @@ const Game = (() => {
     G.score[winner]++;
     const loser = other(winner);
     for (const p of G.players) {
+      const before = p.money;
       if (p.team === winner) addMoney(p, WIN[reason]);
       else {
         let bonus = LOSS[Math.min(G.lossStreak[loser], 4)];
@@ -183,6 +184,7 @@ const Game = (() => {
         addMoney(p, bonus);
         if (p.team === 'T' && (G.bomb.state === 'defused' || (G.bomb.state === 'planted' && reason === 'elim'))) addMoney(p, 800);
       }
+      p.roundReward = p.money - before;
     }
     G.lossStreak[loser] = Math.min(4, G.lossStreak[loser] + 1);
     G.lossStreak[winner] = Math.max(0, G.lossStreak[winner] - 1);

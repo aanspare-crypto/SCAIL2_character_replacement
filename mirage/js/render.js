@@ -385,10 +385,10 @@ const Render = (() => {
         fbox(gb('rail'), 64, t, W + 18, wy + H / 2, wy + H / 2 + 10, 0, 5, stone);
         fbox(gb('rail'), 64, t, W + 22, wy - H / 2 - 7, wy - H / 2, 0, 9, stone);
         if (rnd() < 0.6) {
+          // shutters folded back flat against the wall
           const col = rnd() < 0.5 ? [0.45, 0.72, 0.9] : [0.55, 0.8, 0.5];
-          const ang = rnd() < 0.5;
-          fbox(gb('wood'), 64, du(-(W / 2 + 9)), 2.5, wy - H / 2 + 2, wy + H / 2 - 2, 0.5, ang ? W / 2 : 6, col);
-          fbox(gb('wood'), 64, du(W / 2 + 9), 2.5, wy - H / 2 + 2, wy + H / 2 - 2, 0.5, ang ? W / 2 : 6, col);
+          fbox(gb('wood'), 64, du(-(W / 2 + 8 + W / 4)), W / 2, wy - H / 2 + 2, wy + H / 2 - 2, 0.3, 2.6, col);
+          fbox(gb('wood'), 64, du(W / 2 + 8 + W / 4), W / 2, wy - H / 2 + 2, wy + H / 2 - 2, 0.3, 2.6, col);
         }
       }
     }
@@ -481,6 +481,7 @@ const Render = (() => {
         emitBox(gb('rail'), b.x0 - 3, b.y1 - 6, b.z0 - 3, b.x1 + 3, b.y1 + 1, b.z1 + 3, 128, [1, 1, 1]);
       } else if (b.kind === 'prop') emitProp(gb, b);
     }
+    buildDoorFrames(gb);
     const group = new THREE.Group();
     for (const n in gbs) {
       const mesh = new THREE.Mesh(gbs[n].build(), mat(n));
@@ -491,6 +492,61 @@ const Render = (() => {
     scene.add(group);
     R.worldGroup = group;
     buildDecor();
+  }
+
+  // Stone frames around openings from outdoor streets into buildings.
+  function buildDoorFrames(gb) {
+    const I = World.info, H = World.H, W = World.W;
+    const indoor = o => o && o.kind === 'floor' && o.roofY;
+    const outdoor = o => o && o.kind === 'floor' && !o.roofY;
+    const isWall = o => !o || o.kind === 'wall';
+    const g = gb('rail');
+    const tint = [0.93, 0.9, 0.85];
+    // horizontal boundaries (between rows) and vertical boundaries (between columns)
+    for (const dir of ['x', 'z']) {
+      const spans = [];
+      if (dir === 'x') {
+        for (let c = 0; c < W - 1; c++) for (let r = 0; r < H; r++) {
+          const a = I[r][c], b = I[r][c + 1];
+          let side = 0;
+          if (indoor(a) && outdoor(b)) side = 1; else if (outdoor(a) && indoor(b)) side = -1;
+          if (!side) continue;
+          const last = spans[spans.length - 1];
+          if (last && last.line === c + 1 && last.side === side && last.end === r && last.roof === (side > 0 ? a : b).roofY) last.end = r + 1;
+          else spans.push({ line: c + 1, side, start: r, end: r + 1, roof: (side > 0 ? a : b).roofY });
+        }
+      } else {
+        for (let r = 0; r < H - 1; r++) for (let c = 0; c < W; c++) {
+          const a = I[r][c], b = I[r + 1][c];
+          let side = 0;
+          if (indoor(a) && outdoor(b)) side = 1; else if (outdoor(a) && indoor(b)) side = -1;
+          if (!side) continue;
+          const last = spans[spans.length - 1];
+          if (last && last.line === r + 1 && last.side === side && last.end === c && last.roof === (side > 0 ? a : b).roofY) last.end = c + 1;
+          else spans.push({ line: r + 1, side, start: c, end: c + 1, roof: (side > 0 ? a : b).roofY });
+        }
+      }
+      for (const sp of spans) {
+        if (sp.end - sp.start > 4) continue;
+        const L = sp.line * CELL, s0 = sp.start * CELL, s1 = sp.end * CELL;
+        // floor height just outside the opening
+        const mid = (s0 + s1) / 2;
+        const ox = dir === 'x' ? L + sp.side * 16 : mid, oz = dir === 'x' ? mid : L + sp.side * 16;
+        const fl = World.gridFloor(ox, oz);
+        if (fl === null) continue;
+        const top = sp.roof;
+        const out0 = sp.side > 0 ? L : L - 5, out1 = sp.side > 0 ? L + 5 : L;
+        const box = (a0, a1, y0, y1, o0 = out0, o1 = out1) => {
+          if (dir === 'x') emitBox(g, o0, y0, a0, o1, y1, a1, 64, tint);
+          else emitBox(g, a0, y0, o0, a1, y1, o1, 64, tint);
+        };
+        box(s0 - 10, s1 + 10, top - 6, top + 12);
+        const cellBefore = dir === 'x' ? I[sp.start - 1] && I[sp.start - 1][sp.line - (sp.side > 0 ? 1 : 0)] : I[sp.line - (sp.side > 0 ? 1 : 0)] && I[sp.line - (sp.side > 0 ? 1 : 0)][sp.start - 1];
+        const cellAfter = dir === 'x' ? I[sp.end] && I[sp.end][sp.line - (sp.side > 0 ? 1 : 0)] : I[sp.line - (sp.side > 0 ? 1 : 0)] && I[sp.line - (sp.side > 0 ? 1 : 0)][sp.end];
+        if (isWall(cellBefore)) box(s0 - 9, s0, fl - 4, top);
+        if (isWall(cellAfter)) box(s1, s1 + 9, fl - 4, top);
+      }
+    }
   }
 
   function emitRamp(gb, side, b, S, tint) {
