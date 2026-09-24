@@ -459,7 +459,7 @@ const Render = (() => {
         for (const f of sideFaces(b)) {
           const fi = faceInfo(f, b.y1);
           if (!fi.visible) continue;
-          const y0 = b.kind === 'roof' ? b.y0 : Math.max(LO, fi.base - 8);
+          const y0 = b.kind === 'roof' ? b.y0 : Math.max(LO, fi.base - 8, b.y0);
           emitSide(gb(M), f, y0, b.y1, b.kind === 'roof' ? b.y0 - 200 : fi.base, S, tint);
           if (b.kind === 'wall') decorateFace(f, fi, b.y1, gb);
           // cornice along the roofline

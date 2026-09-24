@@ -432,7 +432,11 @@
     const fp = d.p === viewTarget() && !spec.third;
     Sound.step(fp ? null : [d.p.body.x, d.p.body.y + 2, d.p.body.z], d.surface, fp);
   });
-  Game.on('land', d => { const fp = d.p === viewTarget(); Sound.land(fp ? null : [d.p.body.x, d.p.body.y, d.p.body.z], fp); if (fp) VM.land(d.p.body.landSpeed); });
+  Game.on('land', d => {
+    const fp = d.p === viewTarget();
+    Sound.land(fp ? null : [d.p.body.x, d.p.body.y, d.p.body.z], fp);
+    if (fp) { VM.land(d.p.body.landSpeed); if (d.p === local()) punch.vp -= Math.min(1.5, d.p.body.landSpeed / 400) * DEG * 14; }
+  });
   Game.on('notice', d => { if (d.p === local()) HUD.message(d.text, 2); });
   Game.on('inspect', d => { if (firstPersonOf(d.p)) VM.inspect(); });
   Game.on('zoom', d => { if (d.p === local()) Sound.mech('scope', null, true); });

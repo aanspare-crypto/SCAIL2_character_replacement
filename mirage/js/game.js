@@ -986,7 +986,7 @@ const Game = (() => {
       const cmd = p.cmd, b = p.body;
       const frozen = G.phase === 'freeze';
       const locked = frozen || p.plantT > 0 || G.bomb.defuser === p;
-      const mc = locked ? { fwd: 0, side: 0, yaw: p.yaw, jump: false, duck: cmd.duck, walk: false } : { fwd: cmd.fwd, side: cmd.side, yaw: p.yaw, jump: cmd.jump, duck: cmd.duck, walk: cmd.walk };
+      const mc = locked ? { fwd: 0, side: 0, yaw: p.yaw, jump: false, duck: cmd.duck || p.plantT > 0, walk: false } : { fwd: cmd.fwd, side: cmd.side, yaw: p.yaw, jump: cmd.jump, duck: cmd.duck, walk: cmd.walk };
       if (locked && !frozen) { b.vx *= 0.5; b.vz *= 0.5; }
       const wasGround = b.onGround;
       const moved = playerMove(b, mc, dt, weaponSpeed(p));
