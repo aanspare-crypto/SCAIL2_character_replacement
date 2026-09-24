@@ -77,14 +77,17 @@
     const c = $('view');
     try { const r = c.requestPointerLock({ unadjustedMovement: true }); if (r && r.catch) r.catch(() => { try { c.requestPointerLock(); } catch (e) { /* ignore */ } }); } catch (e) { try { c.requestPointerLock(); } catch (e2) { /* ignore */ } }
   }
-  function enterFullscreen() {
+  // Fullscreen first (so Ctrl+W and friends can be captured), then the mouse.
+  function enterFullscreenAndLock() {
     const d = document.documentElement;
     if (!document.fullscreenElement && d.requestFullscreen) {
       d.requestFullscreen().then(() => {
         if (navigator.keyboard && navigator.keyboard.lock) navigator.keyboard.lock(['Escape', 'KeyW', 'KeyA', 'KeyS', 'KeyD', 'ControlLeft', 'Tab']).catch(() => {});
-      }).catch(() => {});
-    }
+        lockPointer();
+      }).catch(() => lockPointer());
+    } else lockPointer();
   }
+  document.addEventListener('pointerlockerror', () => { if (mode === 'play') HUD.message('Click the game to capture the mouse', 3); });
 
   function startMatch() {
     Sound.init();
@@ -93,8 +96,7 @@
     mode = 'play'; paused = false;
     $('menu').hidden = true; $('endscreen').hidden = true; $('pause').hidden = true;
     $('hud').hidden = false;
-    enterFullscreen();
-    lockPointer();
+    enterFullscreenAndLock();
   }
   $('play').addEventListener('click', startMatch);
   $('again').addEventListener('click', startMatch);
