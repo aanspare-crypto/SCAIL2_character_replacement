@@ -260,7 +260,8 @@ const World = (() => {
         if (b.y0 >= e.y + e.height - 0.5 && b.y0 < ny + e.height) { ny = b.y0 - e.height; e.vy = 0; }
       }
     }
-    const g = groundBelow(e.x, e.z, hw, Math.max(e.y, ny) + (e.vy <= 0 ? 0 : 0));
+    // grounded bodies snap up onto slopes/steps under their footprint; airborne ones get a small tolerance
+    const g = groundBelow(e.x, e.z, hw, Math.max(e.y, ny) + (wasOnGround && e.vy <= 0 ? STEP_HEIGHT : 2));
     e.landSpeed = 0;
     if (ny <= g) {
       if (!wasOnGround) e.landSpeed = -e.vy;

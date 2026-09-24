@@ -4,6 +4,8 @@ A browser tactical shooter in the style of Counter-Strike 2's bomb defusal mode,
 
 This is a fan-made tribute. It is not affiliated with Valve and uses none of their assets.
 
+![Holding A site as a CT with a smoke on A ramp](../docs/screenshots/mirage-a-site.jpg)
+
 ## Play
 
 Open `mirage/index.html` in a desktop browser (Chrome, Edge or Firefox). It needs WebGL and a network connection to load Three.js and the fonts. Click **Play** to lock the mouse; the game asks for fullscreen so that browser shortcuts such as Ctrl+W don't close the tab mid-round.
@@ -30,13 +32,17 @@ Choose your side (Counter-Terrorists or Terrorists), the match length (first to 
 
 When you are dead: left or right click cycles the player you spectate, and Space toggles first- and third-person views.
 
+![Top mid on the T side with an AK-47](../docs/screenshots/mirage-mid.jpg)
+
 ## What's in it
 
 **Rules.** CS2 competitive (MR12, first to 13, halftime side swap, draw at 12–12) or a short match (first to 9). Freeze time, a 20-second buy window, 1:55 rounds, a 40-second bomb timer, a 3.2-second plant, and a 10-second defuse (5 seconds with a kit).
 
 **Economy.** CS2 values: $800 start, $16,000 cap, round-win rewards by win type, the loss bonus ladder ($1,400 to $3,400), per-weapon kill rewards (SMGs $600, AWP $100, knife $1,500), $300 for planting and defusing, and $800 to the Terrorists when they lose with the bomb planted.
 
-**Weapons.** Glock-18, USP-S, P250, Desert Eagle, MAC-10, MP9, Galil AR, FAMAS, AK-47, M4A4, M4A1-S, SSG 08, AWP, knife, HE grenade, flashbang, smoke, molotov/incendiary, Kevlar, helmet and defuse kit. Damage, armour penetration, fire rate, magazine size, reload time, range falloff and movement speed all follow CS2's numbers. Headshots do 4× damage, so an AK-47 one-taps a helmeted player and an M4A4 does not.
+![The buy menu](../docs/screenshots/mirage-buy.jpg)
+
+**Weapons.** Glock-18, USP-S, Tec-9, Five-SeveN, P250, Desert Eagle, Nova, XM1014, MAC-10, MP9, UMP-45, P90, Galil AR, FAMAS, AK-47, M4A4, M4A1-S, SG 553, AUG, SSG 08, AWP and the knife. Utility and gear: HE grenade, flashbang, smoke, molotov/incendiary, Kevlar, helmet and defuse kit. Shotguns fire pellet spreads and reload shell by shell; the SG 553 and AUG have a zoom scope. Damage, armour penetration, fire rate, magazine size, reload time, range falloff and movement speed all follow CS2's numbers. Headshots do 4× damage, so an AK-47 one-taps a helmeted player and an M4A4 does not.
 
 **Shooting.** Accuracy comes from standing, crouching, moving and jumping inaccuracy, plus bloom from firing. Running and shooting sprays everywhere; stop (counter-strafe) to shoot accurately. Rifles and SMGs have fixed spray patterns: the AK-47 climbs, then pulls right, then left. Your view kicks up by 45% of the recoil, as in CS2. Bullets go through thin cover such as crates and cars (wallbangs), losing damage. Hits slow the target down.
 
