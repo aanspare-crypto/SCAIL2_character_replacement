@@ -479,6 +479,17 @@
     if (d < r) punch.shake = Math.max(punch.shake, amt * (1 - d / r));
   }
 
+  const ghostMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+  function setGhost(ch, on) {
+    const key = on ? 'on:' + ch.gunId : 'off';
+    if (ch.ghostKey === key) return;
+    ch.ghostKey = key;
+    ch.root.traverse(o => {
+      if (!o.isMesh) return;
+      if (on) { if (o.material !== ghostMat) { o.userData.mat = o.material; o.material = ghostMat; } }
+      else if (o.userData.mat) { o.material = o.userData.mat; o.userData.mat = null; }
+    });
+  }
   // ---------- per-frame model sync ----------
   function syncModels(dt) {
     const vt = viewTarget();
@@ -492,7 +503,9 @@
       ch.backC4.visible = !!p.slots[5] && Game.curId(p) !== 'c4';
       ch.kit.visible = p.defuser && p.alive;
       Characters.animate(ch, { dt, speed: Math.hypot(b.vx, b.vz), duck: b.duck, onGround: b.onGround, pitch: p.pitch, alive: p.alive });
-      ch.root.visible = !(p === vt && p.alive && !(p !== local() && spec.third));
+      // the first-person body stays invisible but still casts its shadow
+      const hideBody = p === vt && p.alive && !(p !== local() && spec.third);
+      setGhost(ch, hideBody);
     }
     for (const it of Game.items) {
       const g = itemModels.get(it.uid);

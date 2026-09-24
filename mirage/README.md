@@ -10,7 +10,16 @@ This is a fan-made tribute. It is not affiliated with Valve and uses none of the
 
 Open `mirage/index.html` in a desktop browser (Chrome, Edge or Firefox). It needs WebGL and a network connection to load Three.js and the fonts. Click **Play** to lock the mouse; the game asks for fullscreen so that browser shortcuts such as Ctrl+W don't close the tab mid-round.
 
-Choose your side (Counter-Terrorists or Terrorists), the match length (first to 13 or first to 9), bot difficulty (Easy, Normal, Hard, Expert), graphics quality, crosshair colour, sensitivity, volume, announcer voice and friendly fire.
+In the menu you can set:
+
+- your side: Counter-Terrorists or Terrorists
+- match length: first to 13 or first to 9
+- bot difficulty: Easy, Normal, Hard or Expert
+- graphics quality (drops one level by itself if the frame rate stays low)
+- crosshair style (classic static or dynamic) and colour
+- sensitivity and volume
+- voice: announcer and spoken bot radio, announcer only, or off
+- friendly fire
 
 | Input | Action |
 | --- | --- |

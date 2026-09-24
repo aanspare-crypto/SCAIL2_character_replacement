@@ -709,7 +709,8 @@ const Render = (() => {
       const g = new GB();
       for (const q of aoGB.list) {
         const [x0, z0, x1, z1, x2, z2, x3, z3, h0, h1, h2, h3] = q;
-        g.quad([[x0, h0 + 0.35, z0], [x1, h1 + 0.35, z1], [x2, h2 + 0.35, z2], [x3, h3 + 0.35, z3]], 0, 1, 0, [[0, 0], [1, 0], [1, 1], [0, 1]], [1, 1, 1, 1]);
+        // canvas textures are flipped: v = 1 is the dark top row of the gradient
+        g.quad([[x0, h0 + 0.35, z0], [x1, h1 + 0.35, z1], [x2, h2 + 0.35, z2], [x3, h3 + 0.35, z3]], 0, 1, 0, [[0, 1], [1, 1], [1, 0], [0, 0]], [1, 1, 1, 1]);
       }
       const m = new THREE.MeshBasicMaterial({ map: Tex.get('ao'), color: 0x000000, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -2 });
       const mesh = new THREE.Mesh(g.build(), m);
