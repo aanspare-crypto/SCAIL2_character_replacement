@@ -3,7 +3,7 @@
 
 const FX = (() => {
   const F = {};
-  let scene, camera, renderer;
+  let scene, camera;
   const systems = {};
 
   const VS = `
@@ -168,8 +168,8 @@ const FX = (() => {
   F.smokes = [];
   F.fires = [];
 
-  F.init = (sc, cam, rend) => {
-    scene = sc; camera = cam; renderer = rend;
+  F.init = (sc, cam) => {
+    scene = sc; camera = cam;
     const soft = Tex.get('soft'), smoke = Tex.get('smoke'), flash = Tex.get('flash'), fire = Tex.get('fire'), blood = Tex.get('blood');
     systems.spark = new Particles(600, soft, true, false);
     systems.fire = new Particles(500, fire, true, false);

@@ -66,14 +66,6 @@ const Characters = (() => {
 
   function boxMesh(w, h, d, m) { const me = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m); me.castShadow = true; return me; }
   const Y = new THREE.Vector3(0, 1, 0);
-  function limb(a, b, w, m) {
-    const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
-    const dir = vb.clone().sub(va); const len = dir.length();
-    const me = boxMesh(w, len + w * 0.5, w, m);
-    me.position.copy(va).add(vb).multiplyScalar(0.5);
-    me.quaternion.setFromUnitVectors(Y, dir.normalize());
-    return me;
-  }
   function ik(S, H, a, b, pole) {
     const s = new THREE.Vector3(...S), h = new THREE.Vector3(...H);
     const u = h.clone().sub(s); let d = u.length(); u.normalize();

@@ -297,7 +297,6 @@ const Render = (() => {
   }
 
   // ---------- world ----------
-  const WALL_MATS = ['plaster', 'sandstone', 'plasterWhite'];
   function wallMatFor(b) {
     const cxm = (b.x0 + b.x1) / 2;
     const h = hash2(Math.floor(b.x0 / 64) + 7, Math.floor(b.z0 / 64) + 13);
@@ -325,10 +324,6 @@ const Render = (() => {
   }
 
   const aoGB = { list: [] };
-  function aoQuad(x0, z0, x1, z1, y00, y01, y11, y10, along) {
-    // quad lying on the floor; v = 0 at the wall edge
-    aoGB.list.push([x0, z0, x1, z1, y00, y01, y11, y10, along]);
-  }
   // Soft contact shadow on the floor in front of a face.
   function aoAlongFace(f, fi, top, width) {
     const [ax, az] = f.a, [bx, bz] = f.b, [nx, , nz] = f.n;

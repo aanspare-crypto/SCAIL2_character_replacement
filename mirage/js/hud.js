@@ -125,10 +125,8 @@ const HUD = (() => {
         ctx.restore();
       }
     }
-    let n = 0;
     for (const p of Game.players) {
       if (p.team !== team) continue;
-      n++;
       if (!p.alive) {
         ctx.save(); ctx.translate(p.body.x, p.body.z); ctx.rotate(-view.yaw);
         const s = 4 * d / scale; ctx.strokeStyle = p.color; ctx.lineWidth = s * 0.5;

@@ -239,7 +239,5 @@ const VM = (() => {
     pivot.rotation.set(rx, ry, rz);
   };
   V.clear = () => { V.set(null, null); curId = null; };
-  V.BASE = BASE;
-  V.debug = () => ({ curId, visible: holder.visible, pos: pivot.position.toArray(), rot: pivot.rotation.toArray(), st: Object.assign({}, st), children: pivot.children.length });
   return V;
 })();

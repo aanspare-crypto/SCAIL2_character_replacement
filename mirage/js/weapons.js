@@ -421,7 +421,6 @@ const WeaponModels = (() => {
     return { group: g, muzzle: [0, 0, 0], mag: null, grip: [0, -1.2, 1], fore: [0, -1.2, -1], eject: [0, 0, 0], led };
   };
 
-  const cache = {};
   function build(id) {
     const r = B[id]();
     r.group.traverse(o => { if (o.isMesh) { o.castShadow = true; } });

@@ -25,7 +25,6 @@ const Sound = (() => {
     for (let ch = 0; ch < 2; ch++) {
       const d = ir.getChannelData(ch);
       for (let i = 0; i < irLen; i++) {
-        const t = i / ctx.sampleRate;
         d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / irLen, 2.6) * 0.5;
       }
       for (const [t, a] of [[0.045, 0.6], [0.083, 0.45], [0.13, 0.35], [0.19, 0.25], [0.27, 0.18]]) {

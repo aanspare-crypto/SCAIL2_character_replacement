@@ -152,7 +152,7 @@ const Bots = (() => {
   }
 
   function planCT() {
-    const S = TS.CT = { rotated: null, retake: null, retakeGo: false, retakeAt: 0 };
+    TS.CT = { rotated: null, retake: null, retakeGo: false, retakeAt: 0 };
     const cts = Game.players.filter(p => p.team === 'CT');
     const bots = cts.filter(p => p.isBot);
     const hasHuman = cts.some(p => !p.isBot);
@@ -171,7 +171,6 @@ const Bots = (() => {
   }
 
   // ---------- team logic, runs a few times per second ----------
-  let teamT = 0;
   function teamThink() {
     const now = Game.time;
     for (const t of ['T', 'CT']) { const L = intel[t]; while (L.length && now - L[0].t > 8) L.shift(); }
@@ -386,7 +385,6 @@ const Bots = (() => {
   }
 
   function turnTo(p, yaw, pitch, dt, speedMul = 1) {
-    const ai = p.ai;
     const k = 1 - Math.exp(-dt * D.smooth * speedMul);
     let dy = angDiff(p.yaw, yaw) * k, dp = (pitch - p.pitch) * k;
     const maxStep = D.turn * DEG * dt * speedMul;

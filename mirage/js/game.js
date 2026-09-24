@@ -526,7 +526,6 @@ const Game = (() => {
 
   // ---------- knife ----------
   function knifeAttack(p, stab) {
-    const w = WEAPONS.knife;
     const eye = G.eye(p), d = dirFrom(p.yaw, p.pitch);
     const reach = stab ? 34 : 48;
     const wh = World.raycast(eye[0], eye[1], eye[2], d[0], d[1], d[2], reach + 10);
