@@ -13,7 +13,7 @@ const VM = (() => {
     rifle: { p: [6.8, -6.2, -14.5], r: [0.03, 0.12, -0.05] },
     smg: { p: [6.2, -5.2, -13], r: [0.03, 0.12, -0.05] },
     sniper: { p: [7.0, -6.4, -15], r: [0.03, 0.11, -0.05] },
-    pistol: { p: [5.0, -4.3, -13.8], r: [0.04, 0.1, -0.03] },
+    pistol: { p: [5.4, -4.7, -15.2], r: [0.04, 0.1, -0.03] },
     knife: { p: [6.5, -5.2, -12.5], r: [0.25, 0.35, 0.55] },
     grenade: { p: [5.5, -4.8, -12], r: [0.1, 0.2, 0.1] },
     c4: { p: [0.5, -5.5, -14], r: [0.9, 0, 0] },
@@ -37,7 +37,7 @@ const VM = (() => {
   function limb(g, a, b, w, m) {
     const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
     const d = vb.clone().sub(va), len = d.length();
-    const me = new THREE.Mesh(new THREE.BoxGeometry(w, len, w), m);
+    const me = new THREE.Mesh(new THREE.CylinderGeometry(w * 0.52, w * 0.6, len, 10), m);
     me.position.copy(va).add(vb).multiplyScalar(0.5);
     me.quaternion.setFromUnitVectors(Y, d.normalize());
     g.add(me);
@@ -53,13 +53,17 @@ const VM = (() => {
     const re = [g[0] + 5, g[1] - 9, g[2] + 13];
     limb(arms, [g[0] + 0.6, g[1] - 1.2, g[2] + 1.2], re, 3.3, sleeve);
     limb(arms, [g[0] + 0.3, g[1] - 0.6, g[2] + 1.6], [g[0] + 0.6, g[1] - 1.8, g[2] + 3.8], 3.6, cuff);
-    const rh = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 3.2), glove); rh.position.set(g[0] + 0.2, g[1] + 0.3, g[2]); arms.add(rh);
-    const rf = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.2, 1.2), glove); rf.position.set(g[0] - 0.4, g[1] + 0.8, g[2] - 1.6); arms.add(rf);
+    const hg = new THREE.SphereGeometry(1.7, 10, 8); hg.scale(0.85, 1.05, 1.1);
+    const rh = new THREE.Mesh(hg, glove); rh.position.set(g[0] + 0.2, g[1] + 0.2, g[2]); arms.add(rh);
+    const fg = new THREE.CylinderGeometry(0.55, 0.55, 3, 8); fg.rotateZ(Math.PI / 2);
+    const rf = new THREE.Mesh(fg, glove); rf.position.set(g[0] - 0.5, g[1] + 0.9, g[2] - 1.4); arms.add(rf);
     if (type !== 'knife' && type !== 'grenade') {
       const le = [f[0] - 8, f[1] - 9, f[2] + 11];
       limb(arms, [f[0] - 0.8, f[1] - 1.2, f[2] + 0.8], le, 3.3, sleeve);
       limb(arms, [f[0] - 0.6, f[1] - 0.8, f[2] + 1.0], [f[0] - 1.6, f[1] - 2.2, f[2] + 3.2], 3.6, cuff);
-      const lh = new THREE.Mesh(new THREE.BoxGeometry(2.8, 2.6, 3.4), glove); lh.position.set(f[0] - 0.4, f[1] - 0.4, f[2]); arms.add(lh);
+      const lg = new THREE.SphereGeometry(1.8, 10, 8); lg.scale(0.95, 0.9, 1.2);
+      const lh = new THREE.Mesh(lg, glove); lh.position.set(f[0] - 0.5, f[1] - 0.5, f[2]); arms.add(lh);
+      const lf = new THREE.Mesh(fg, glove); lf.position.set(f[0] + 0.4, f[1] + 0.4, f[2] - 0.6); arms.add(lf);
     }
     m.group.add(arms);
   }

@@ -15,7 +15,7 @@
   }
 
   // ---------- settings ----------
-  const DEF = { team: 'CT', mode: 'competitive', difficulty: 'normal', quality: 'high', sens: 2, vol: 0.7, xhair: '#4cff4c', voice: '1', ff: '0' };
+  const DEF = { team: 'CT', mode: 'competitive', difficulty: 'normal', quality: 'high', sens: 2, vol: 0.7, xhair: '#4cff4c', xstyle: 'static', voice: '1', ff: '0' };
   let S = Object.assign({}, DEF);
   try { Object.assign(S, JSON.parse(localStorage.getItem('mirage5v5') || '{}')); } catch (e) { /* storage unavailable */ }
   const save = () => { try { localStorage.setItem('mirage5v5', JSON.stringify(S)); } catch (e) { /* storage unavailable */ } };
@@ -27,8 +27,10 @@
   HUD.init();
   Bots.init();
   Sound.setVolume(S.vol);
-  Sound.voice = S.voice === '1';
+  Sound.voice = S.voice !== '0';
+  Sound.radioVoice = S.voice === '1';
   HUD.setCrosshairColor(S.xhair);
+  HUD.settings.dynamic = S.xstyle === 'dynamic';
   const cam = Render.camera;
 
   let mode = 'menu';
@@ -53,7 +55,7 @@
     $('sens2').value = S.sens; $('sensv2').textContent = (+S.sens).toFixed(2);
     $('vol').value = S.vol; $('volv').textContent = Math.round(S.vol * 100);
     $('vol2').value = S.vol; $('volv2').textContent = Math.round(S.vol * 100);
-    $('xhair').value = S.xhair; $('voice').value = S.voice; $('ff').value = S.ff;
+    $('xhair').value = S.xhair; $('xstyle').value = S.xstyle; $('voice').value = S.voice; $('ff').value = S.ff;
   }
   document.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
@@ -65,7 +67,8 @@
   bindSlider('sens', 'sens'); bindSlider('sens2', 'sens');
   bindSlider('vol', 'vol', null, null, () => Sound.setVolume(S.vol)); bindSlider('vol2', 'vol', null, null, () => Sound.setVolume(S.vol));
   $('xhair').addEventListener('change', e => { S.xhair = e.target.value; save(); HUD.setCrosshairColor(S.xhair); });
-  $('voice').addEventListener('change', e => { S.voice = e.target.value; save(); Sound.voice = S.voice === '1'; });
+  $('xstyle').addEventListener('change', e => { S.xstyle = e.target.value; save(); HUD.settings.dynamic = S.xstyle === 'dynamic'; });
+  $('voice').addEventListener('change', e => { S.voice = e.target.value; save(); Sound.voice = S.voice !== '0'; Sound.radioVoice = S.voice === '1'; });
   $('ff').addEventListener('change', e => { S.ff = e.target.value; save(); });
   syncMenu();
   if (window.matchMedia && !window.matchMedia('(pointer: fine)').matches) $('playnote').textContent = 'This game needs a keyboard and mouse.';
@@ -453,7 +456,7 @@
     itemModels.set(it.uid, g);
   });
   Game.on('itemRemove', it => { const g = itemModels.get(it.uid); if (g) { Render.scene.remove(g); itemModels.delete(it.uid); } });
-  Bots.radio = (p, t) => { const l = local(); if (l && p.team === l.team) { HUD.radio(p, t); Sound.ui('radio'); } };
+  Bots.radio = (p, t) => { const l = local(); if (l && p.team === l.team) { HUD.radio(p, t); Sound.ui('radio'); Sound.radio(t, p.id); } };
   Sound.setOcclusion(pos => !World.losClear(cam.position.x, cam.position.y, cam.position.z, pos[0], pos[1], pos[2]));
 
   function placeBomb(x, y, z) {

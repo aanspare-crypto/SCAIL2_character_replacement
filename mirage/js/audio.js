@@ -325,6 +325,23 @@ const Sound = (() => {
     setTimeout(bird, 4000);
   }
 
+  // Teammate radio lines, spoken quietly and never over another line.
+  S.radioVoice = true;
+  let radioT = 0;
+  S.radio = (text, seed) => {
+    if (!S.radioVoice || typeof speechSynthesis === 'undefined') return;
+    const now = performance.now();
+    if (now - radioT < 3500 || speechSynthesis.speaking) return;
+    radioT = now;
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 1.2; u.pitch = 0.7 + (seed % 5) * 0.12; u.volume = Math.min(1, S.volume * 0.7);
+      const vs = speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang));
+      if (vs.length) u.voice = vs[seed % vs.length];
+      speechSynthesis.speak(u);
+    } catch (e) { /* speech not available */ }
+  };
+
   // Announcer lines through speech synthesis where available.
   S.voice = true;
   S.say = (text) => {

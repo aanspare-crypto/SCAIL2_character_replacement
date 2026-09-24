@@ -11,6 +11,12 @@ const HUD = (() => {
   H.buyCat = -1;
   H.settings = { crosshair: '#4cff4c', dynamic: true };
 
+  // Only touch the DOM when a value actually changes.
+  const cache = new Map();
+  function setHTML(id, html) { if (cache.get(id) === html) return; cache.set(id, html); $(id).innerHTML = html; }
+  function setText(id, t) { const k = 't:' + id; if (cache.get(k) === t) return; cache.set(k, t); $(id).textContent = t; }
+  function setProp(id, prop, v) { const k = id + ':' + prop; if (cache.get(k) === v) return; cache.set(k, v); $(id)[prop] = v; }
+  function setStyle(id, prop, v) { const k = id + ':s:' + prop; if (cache.get(k) === v) return; cache.set(k, v); $(id).style[prop] = v; }
   function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
   // ---------- radar ----------
@@ -240,68 +246,66 @@ const HUD = (() => {
     else timer = fmtTime(G.phaseT);
     const lt = local ? local.team : 'CT';
     const left = lt, right = G.other(lt);
-    $('tb-left').innerHTML = avatars(left);
-    $('tb-right').innerHTML = avatars(right);
-    $('tb-sl').textContent = G.score[left]; $('tb-sl').className = 'sc ' + left.toLowerCase();
-    $('tb-sr').textContent = G.score[right]; $('tb-sr').className = 'sc ' + right.toLowerCase();
-    $('tb-time').innerHTML = timer;
-    $('tb-time').className = 'time' + (G.phase === 'planted' ? ' planted' : G.phase === 'freeze' ? ' freeze' : '');
-    $('tb-round').textContent = G.phase === 'freeze' ? 'Buy time' : `Round ${G.round} / ${G.mode.maxRounds}`;
+    setHTML('tb-left', avatars(left));
+    setHTML('tb-right', avatars(right));
+    setText('tb-sl', String(G.score[left])); setProp('tb-sl', 'className', 'sc ' + left.toLowerCase());
+    setText('tb-sr', String(G.score[right])); setProp('tb-sr', 'className', 'sc ' + right.toLowerCase());
+    setHTML('tb-time', timer);
+    setProp('tb-time', 'className', 'time' + (G.phase === 'planted' ? ' planted' : G.phase === 'freeze' ? ' freeze' : ''));
+    setText('tb-round', G.phase === 'freeze' ? 'Buy time' : `Round ${G.round} / ${G.mode.maxRounds}`);
     // radar
     drawRadar(p ? { x: p.body.x, z: p.body.z, yaw: view.yaw, p } : { x: view.x, z: view.z, yaw: view.yaw, p: null }, lt);
-    $('loc').textContent = p ? World.calloutAt(p.body.x, p.body.z) : '';
+    setText('loc', p ? World.calloutAt(p.body.x, p.body.z) : '');
     // money (always the local player's)
-    if (local) { $('money').textContent = '$' + local.money; $('buyhint').hidden = !(G.canBuy(local) && local.alive); }
+    if (local) { setText('money', '$' + local.money); setProp('buyhint', 'hidden', !(G.canBuy(local) && local.alive)); }
     // vitals for the viewed player
-    $('vitals').style.visibility = p ? '' : 'hidden';
-    $('weapon').style.visibility = p ? '' : 'hidden';
+    setStyle('vitals', 'visibility', p ? '' : 'hidden');
+    setStyle('weapon', 'visibility', p ? '' : 'hidden');
     if (p) {
-      $('hp').textContent = Math.max(0, p.hp);
-      $('hpbar').style.transform = `scaleX(${Math.max(0, p.hp) / 100})`;
-      $('vitals').classList.toggle('low', p.hp <= 20);
-      $('ar').textContent = p.armor;
-      $('arbar').style.transform = `scaleX(${p.armor / 100})`;
-      $('helm').hidden = !p.helmet;
-      $('kit').hidden = !p.defuser;
-      $('c4ico').hidden = !p.slots[5];
+      setText('hp', String(Math.max(0, p.hp)));
+      setStyle('hpbar', 'transform', `scaleX(${Math.max(0, p.hp) / 100})`);
+      setProp('vitals', 'className', p.hp <= 20 ? 'low' : '');
+      setText('ar', String(p.armor));
+      setStyle('arbar', 'transform', `scaleX(${p.armor / 100})`);
+      setProp('helm', 'hidden', !p.helmet);
+      setProp('kit', 'hidden', !p.defuser);
+      setProp('c4ico', 'hidden', !p.slots[5]);
       const w = G.curDef(p), inst = G.curInst(p);
-      $('wname').textContent = w.name;
-      if (inst && w.mag) { $('ammo').innerHTML = `<b class="${inst.ammo <= w.mag * 0.2 ? 'low' : ''}">${inst.ammo}</b><span>/ ${inst.reserve}</span>`; }
-      else if (w.type === 'grenade') $('ammo').innerHTML = `<b>${p.nades.filter(x => x === w.id).length}</b>`;
-      else $('ammo').innerHTML = '';
-      $('nades').innerHTML = p.nades.map((n, i) => `<span class="nd ${p.cur === 4 && p.nadeIdx === i ? 'on' : ''}">${WEAPONS[n].name.replace(' Grenade', '').replace('Incendiary', 'Incendiary')}</span>`).join('');
+      setText('wname', w.name);
+      if (inst && w.mag) setHTML('ammo', `<b class="${inst.ammo <= w.mag * 0.2 ? 'low' : ''}">${inst.ammo}</b><span>/ ${inst.reserve}</span>`);
+      else if (w.type === 'grenade') setHTML('ammo', `<b>${p.nades.filter(x => x === w.id).length}</b>`);
+      else setHTML('ammo', '');
+      setHTML('nades', p.nades.map((n, i) => `<span class="nd ${p.cur === 4 && p.nadeIdx === i ? 'on' : ''}">${WEAPONS[n].name.replace(' Grenade', '')}</span>`).join(''));
       // slot list, shown briefly after switching
       const key = [p.cur, p.nadeIdx, p.slots[1] && p.slots[1].id, p.slots[2] && p.slots[2].id, p.nades.join(), !!p.slots[5]].join('|');
       if (key !== lastSlotsKey) { lastSlotsKey = key; slotsShowT = 2.2; renderSlots(p); }
       slotsShowT -= dt;
-      $('slots').classList.toggle('show', slotsShowT > 0);
+      setProp('slots', 'className', slotsShowT > 0 ? 'show' : '');
     }
     // crosshair gap follows inaccuracy
+    if (p && !H.settings.dynamic && cache.get('gap') !== '4px') { cache.set('gap', '4px'); $('crosshair').style.setProperty('--gap', '4px'); }
     if (p && H.settings.dynamic) {
       const w = G.curDef(p);
       let gap = 4;
       if (w.inStand !== undefined) gap = 3 + Math.min(40, G.inaccuracy(p, w) * 0.22);
-      $('crosshair').style.setProperty('--gap', gap.toFixed(1) + 'px');
+      const gs = gap.toFixed(1) + 'px';
+      if (cache.get('gap') !== gs) { cache.set('gap', gs); $('crosshair').style.setProperty('--gap', gs); }
     }
-    $('crosshair').hidden = !p || !p.alive || G.curDef(p).type === 'sniper' || (G.curDef(p).scope && p.ws.zoom > 0);
-    $('crossdot').hidden = !(p && p.alive && G.curDef(p).type === 'sniper' && p.ws.zoom === 0);
+    setProp('crosshair', 'hidden', !p || !p.alive || G.curDef(p).type === 'sniper' || !!(G.curDef(p).scope && p.ws.zoom > 0));
+    setProp('crossdot', 'hidden', !(p && p.alive && G.curDef(p).type === 'sniper' && p.ws.zoom === 0));
     // plant / defuse progress
-    const prog = $('progress');
-    if (p && p.plantT > 0) { prog.hidden = false; $('progbar').style.transform = `scaleX(${Math.min(1, p.plantT / G.cfg.plantTime)})`; $('proglabel').textContent = 'Planting the bomb'; }
-    else if (p && G.bomb.defuser === p) { prog.hidden = false; $('progbar').style.transform = `scaleX(${Math.min(1, p.defuseT / G.bombDefuseTime(p))})`; $('proglabel').textContent = p.defuser ? 'Defusing with kit' : 'Defusing the bomb'; }
-    else prog.hidden = true;
+    if (p && p.plantT > 0) { setProp('progress', 'hidden', false); setStyle('progbar', 'transform', `scaleX(${Math.min(1, p.plantT / G.cfg.plantTime).toFixed(3)})`); setText('proglabel', 'Planting the bomb'); }
+    else if (p && G.bomb.defuser === p) { setProp('progress', 'hidden', false); setStyle('progbar', 'transform', `scaleX(${Math.min(1, p.defuseT / G.bombDefuseTime(p)).toFixed(3)})`); setText('proglabel', p.defuser ? 'Defusing with kit' : 'Defusing the bomb'); }
+    else setProp('progress', 'hidden', true);
     // spectator label
-    const spec = $('spec');
-    if (local && !local.alive && p && p !== local) { spec.hidden = false; spec.innerHTML = `Spectating <b class="${p.team.toLowerCase()}">${esc(p.name)}</b> · <kbd>Click</kbd> next player · <kbd>Space</kbd> ${view.third ? 'first person' : 'third person'}`; }
-    else spec.hidden = true;
+    if (local && !local.alive && p && p !== local) { setProp('spec', 'hidden', false); setHTML('spec', `Spectating <b class="${p.team.toLowerCase()}">${esc(p.name)}</b> · <kbd>Click</kbd> next player · <kbd>Space</kbd> ${view.third ? 'first person' : 'third person'}`); }
+    else setProp('spec', 'hidden', true);
     // target id and context hints
-    const tid = $('targetid');
     if (p && p.alive && view.aimed) {
       const a = view.aimed, mate = a.team === p.team;
-      tid.textContent = (mate ? 'Teammate: ' : 'Enemy: ') + a.name + (mate ? `  ${a.hp} HP` : '');
-      tid.className = mate ? a.team.toLowerCase() : 'enemy'; tid.hidden = false;
-    } else tid.hidden = true;
-    const hint = $('hint');
+      setText('targetid', (mate ? 'Teammate: ' : 'Enemy: ') + a.name + (mate ? `  ${a.hp} HP` : ''));
+      setProp('targetid', 'className', mate ? a.team.toLowerCase() : 'enemy'); setProp('targetid', 'hidden', false);
+    } else setProp('targetid', 'hidden', true);
     let ht = '';
     if (local && local.alive && p === local) {
       const B = G.bomb, b = local.body;
@@ -309,7 +313,7 @@ const HUD = (() => {
       else if (G.curId(local) === 'c4' && World.bombsiteAt(b.x, b.z) && local.plantT === 0 && G.phase === 'live') ht = 'Hold <kbd>Mouse 1</kbd> to plant the bomb';
       else if (view.item) ht = `Press <kbd>E</kbd> to pick up ${esc(WEAPONS[view.item.inst.id].name)}`;
     }
-    hint.innerHTML = ht; hint.hidden = !ht;
+    setHTML('hint', ht); setProp('hint', 'hidden', !ht);
     if (H.buyOpen) updateBuyMenu();
     if (H.scoreOpen) renderScoreboard();
   };
