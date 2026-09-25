@@ -410,7 +410,7 @@ const HUD = (() => {
       return h + '</tbody></table></div>';
     };
     const hist = G.history.map((r, i) => `<span class="hr ${r.winner.toLowerCase()}" title="Round ${i + 1}: ${r.winner} ${r.reason}">${{ elim: '☠', bomb: '✹', defuse: '✂', time: '⏱' }[r.reason]}</span>`).join('');
-    $('scoreboard').innerHTML = `<div class="sb-head"><span class="eyebrow">Competitive · Mirage</span><b>Round ${G.round}</b></div>${table(lt)}<div class="sb-hist">${hist}</div>${table(G.other(lt))}`;
+    $('scoreboard').innerHTML = `<div class="sb-head"><span class="eyebrow">Competitive · ${MAP_NAME}</span><b>Round ${G.round}</b></div>${table(lt)}<div class="sb-hist">${hist}</div>${table(G.other(lt))}`;
   }
   H.showScore = (open) => { H.scoreOpen = open; $('scoreboard').hidden = !open; sbT = 0; if (open) renderScoreboard(); };
   H.renderScoreboardNow = () => { sbT = 0; renderScoreboard(); };

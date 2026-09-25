@@ -122,7 +122,7 @@ const Game = (() => {
     const x = s[0] + (rnd() - 0.5) * 20, z = s[1] + (rnd() - 0.5) * 20;
     const y = World.floorAt(x, z);
     p.body = makeBody(x, y, z);
-    const tx = p.team === 'T' ? cx(30) : cx(30), tz = p.team === 'T' ? cz(27) : cz(46);
+    const [tx, tz] = MAPDEF.spawnLook[p.team];
     p.yaw = Math.atan2(-(tx - x), -(tz - z));
     p.pitch = 0;
   }

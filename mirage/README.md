@@ -1,6 +1,6 @@
 # Mirage 5v5
 
-A browser tactical shooter in the style of Counter-Strike 2's bomb defusal mode, played on a Mirage-inspired map. You play on a team with four bots against five bots. Built with Three.js; the map, textures, models and sounds are all generated in code, so there are no asset files.
+A browser tactical shooter in the style of Counter-Strike 2's bomb defusal mode. It has two maps: a Mirage-inspired map and Kasbah, an original map. You play on a team with four bots against five bots. Built with Three.js; the map, textures, models and sounds are all generated in code, so there are no asset files.
 
 This is a fan-made tribute. It is not affiliated with Valve and uses none of their assets.
 
@@ -12,6 +12,7 @@ Open `mirage/index.html` in a desktop browser (Chrome, Edge or Firefox). It need
 
 In the menu you can set:
 
+- the map: Mirage or Kasbah (the page reloads to build the new map; `index.html?map=kasbah` also works)
 - your side: Counter-Terrorists or Terrorists
 - match length: first to 13 or first to 9
 - bot difficulty: Easy, Normal, Hard or Expert
@@ -67,7 +68,17 @@ When you are dead: left or right click cycles the player you spectate, and Space
 
 They also carry and fetch the bomb, throw smokes, flashes and molotovs from lineups before executing, plant, and play post-plant positions. CT bots hold standard positions, throw molotovs, HEs, flashes and smokes at attackers pushing their site, rotate when two or more attackers are seen at a site, and after a plant they regroup, retake and defuse. In combat, bots have a reaction time, aim error that settles over time, headshot chance and recoil control, all set by difficulty. They counter-strafe to shoot, burst at long range, spray up close, avoid shooting through teammates, turn toward noises and damage, and radio callouts to your team.
 
-**Map.** A Mirage-inspired layout: T spawn, T ramp, palace, A ramp, Tetris, A site (triple, firebox, sandwich, ninja), jungle, stairs, connector, CT spawn, ticket booth, mid, top mid, window, short/catwalk, underpass, apartments, B short, kitchen, market, arch and B site with the van and bench. The radar in the top left rotates with you and shows the callout for your current area.
+**Maps.** The radar in the top left rotates with you and shows the callout for your current area.
+
+- **Mirage**: a Mirage-inspired layout: T spawn, T ramp, palace, A ramp, Tetris, A site (triple, firebox, sandwich, ninja), jungle, stairs, connector, CT spawn, ticket booth, mid, top mid, window, short/catwalk, underpass, apartments, B short, kitchen, market, arch and B site with the van and bench.
+- **Kasbah**: an original walled desert town in terracotta and sunset light. Terrorists spawn in the west and Counter-Terrorists in the east. Three lanes lead to the sites:
+  - north: the souk street of market stalls, then a ramp and a covered arch onto the raised A terrace
+  - middle: the well plaza, with short stairs up to a balcony on A, a tower whose window overlooks CT mid, and an alley down to B short
+  - south: a flooded cistern tunnel under the town that comes up beside the B courtyard and its fountain
+
+  CTs reach A over CT walk and B through the garden, and both have windows onto the site. The bots have their own positions, routes, grenade lineups and retakes for each map.
+
+![B site on Kasbah, seen from the garden door](../docs/screenshots/kasbah-b-site.jpg)
 
 **HUD.** The HUD is modelled on CS2's:
 
@@ -89,7 +100,8 @@ They also carry and fetch the bomb, throw smokes, flashes and molotovs from line
 
 | File | Purpose |
 | --- | --- |
-| `js/map.js` | Map grid, regions and callouts, props, spawns, bombsites, bot positions and grenade lineups |
+| `js/map.js` | Picks the map (menu setting or `?map=`) and exposes its data to the rest of the game |
+| `js/maps/mirage.js`, `js/maps/kasbah.js` | Each map's grid, regions and callouts, props, spawns, bombsites, bot positions and tactics, grenade lineups and lighting |
 | `js/world.js` | Collision blocks, ray casting, the navigation grid and A* pathfinding. Runs under Node |
 | `js/movement.js` | Source-style player movement |
 | `js/weapons.js` | Weapon stats, spray patterns, damage and weapon models |
@@ -100,4 +112,6 @@ They also carry and fetch the bomb, throw smokes, flashes and molotovs from line
 | `js/viewmodel.js`, `js/hud.js`, `js/audio.js` | First-person weapon, HUD and procedural sound |
 | `js/main.js` | Menus, input, camera, spectating and the frame loop |
 
-`world.js`, `movement.js`, `weapons.js`, `characters.js`, `game.js` and `bots.js` load under Node, so whole bot-versus-bot matches can be simulated headless for testing.
+`world.js`, `movement.js`, `weapons.js`, `characters.js`, `game.js` and `bots.js` load under Node, so whole bot-versus-bot matches can be simulated headless for testing. Set the `MAP` environment variable (`MAP=kasbah`) to pick the map there.
+
+To add a map, copy one of the files in `js/maps/`, register it under a new id on `globalThis.MAPS`, load it in `index.html` before `js/map.js`, and add a button for it in the menu.

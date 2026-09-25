@@ -281,8 +281,16 @@
   <div class="sheet">
     <div class="brand">
       <span class="eyebrow">Bomb defusal · 5v5 competitive</span>
-      <h1>Mirage</h1>
-      <p>Pick a side. You and four bots take on five bots on a Mirage-style map: rounds, buy menu, bomb plant and defuse, CS2-style recoil and economy.</p>
+      <h1 id="maptitle">Mirage</h1>
+      <p>Pick a map and a side. You and four bots take on five bots: rounds, buy menu, bomb plant and defuse, CS2-style recoil and economy.</p>
+    </div>
+    <div class="opt">
+      <span class="eyebrow">Map</span>
+      <div class="seg" data-opt="map">
+        <button type="button" data-v="mirage" aria-pressed="true">Mirage</button>
+        <button type="button" data-v="kasbah" aria-pressed="false">Kasbah</button>
+      </div>
+      <p class="note" id="mapblurb"></p>
     </div>
     <div class="opt">
       <span class="eyebrow">Your side</span>
@@ -365,7 +373,7 @@
 
 <section class="overlay" id="pause" hidden>
   <div class="sheet">
-    <div class="brand"><span class="eyebrow">Paused</span><h1 style="font-size:clamp(54px,8vw,96px)">Mirage</h1></div>
+    <div class="brand"><span class="eyebrow">Paused</span><h1 id="pausetitle" style="font-size:clamp(54px,8vw,96px)">Mirage</h1></div>
     <div class="row2">
       <div class="opt"><span class="eyebrow">Sensitivity</span><div class="slider"><input type="range" id="sens2" min="0.3" max="6" step="0.05" value="2"><output id="sensv2">2.00</output></div></div>
       <div class="opt"><span class="eyebrow">Volume</span><div class="slider"><input type="range" id="vol2" min="0" max="1" step="0.05" value="0.7"><output id="volv2">70</output></div></div>
@@ -398,7 +406,10 @@
 <script>window.THREE || document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');</script>
 <script src="js/meshutil.js"></script>
 <script src="js/textures.js"></script>
+<script src="js/maps/mirage.js"></script>
+<script src="js/maps/kasbah.js"></script>
 <script src="js/map.js"></script>
+<script>document.title = MAP_NAME + ' 5v5'; document.getElementById('loading').textContent = 'Building ' + MAP_NAME + '…';</script>
 <script src="js/world.js"></script>
 <script src="js/movement.js"></script>
 <script src="js/weapons.js"></script>

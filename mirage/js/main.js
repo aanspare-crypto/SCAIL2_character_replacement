@@ -15,10 +15,13 @@
   }
 
   // ---------- settings ----------
-  const DEF = { team: 'CT', mode: 'competitive', difficulty: 'normal', quality: 'high', sens: 2, vol: 0.7, xhair: '#4cff4c', xstyle: 'static', voice: '1', ff: '0' };
+  const DEF = { map: 'mirage', team: 'CT', mode: 'competitive', difficulty: 'normal', quality: 'high', sens: 2, vol: 0.7, xhair: '#4cff4c', xstyle: 'static', voice: '1', ff: '0' };
   let S = Object.assign({}, DEF);
   try { Object.assign(S, JSON.parse(localStorage.getItem('mirage5v5') || '{}')); } catch (e) { /* storage unavailable */ }
   const save = () => { try { localStorage.setItem('mirage5v5', JSON.stringify(S)); } catch (e) { /* storage unavailable */ } };
+  // The map is built when the scripts load, so the page reloads to switch maps.
+  if (S.map !== MAP_ID) { S.map = MAP_ID; save(); }
+  $('maptitle').textContent = MAP_NAME; $('pausetitle').textContent = MAP_NAME; $('mapblurb').textContent = MAPDEF.blurb;
 
   // ---------- init ----------
   Render.init($('view'), S.quality);
@@ -60,6 +63,11 @@
   document.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     S[seg.dataset.opt] = b.dataset.v; save(); syncMenu();
+    if (seg.dataset.opt === 'map' && S.map !== MAP_ID && MAPS[S.map]) {
+      $('loading').textContent = 'Building ' + MAPS[S.map].name + '…'; $('loading').hidden = false;
+      const u = new URL(location.href); u.searchParams.set('map', S.map); location.href = u.href;
+      return;
+    }
     if (seg.dataset.opt === 'quality') Render.setQuality(S.quality);
     Sound.ui('click');
   }));
@@ -560,16 +568,7 @@
   // ---------- camera ----------
   let curFov = 73.74;
   const menuT = { t: 0 };
-  const MENU_PATH = [
-    [[3660, 330, 1500], [2600, 120, 1650]],
-    [[2450, 260, 1700], [1500, 150, 1700]],
-    [[1900, 420, 2500], [2100, 60, 3000]],
-    [[2500, 300, 3400], [1800, 60, 2900]],
-    [[1300, 380, 2900], [700, 60, 2800]],
-    [[700, 360, 1400], [550, 40, 700]],
-    [[1100, 380, 400], [500, 40, 600]],
-    [[3300, 420, 1000], [3600, 100, 1700]],
-  ];
+  const MENU_PATH = MAPDEF.menuPath;
   function menuCamera(dt) {
     menuT.t += dt * 0.055;
     const n = MENU_PATH.length;

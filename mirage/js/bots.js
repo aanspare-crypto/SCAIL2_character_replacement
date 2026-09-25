@@ -21,19 +21,10 @@ const Bots = (() => {
   let D = DIFF.normal;
   B.setDifficulty = d => { D = DIFF[d] || DIFF.normal; };
 
-  const ZONES = {
-    A: ['A Site', 'A Ramp', 'Palace', 'Stairs'],
-    B: ['B Site', 'B Apps', 'B Short', 'Kitchen', 'Market', 'Arch'],
-  };
-  const ROUTES = {
-    A: { ramp: ['t_ramp_low', 't_ramp_top'], palace: ['t_palace', 't_palace2'], mid: ['t_connector_low'] },
-    B: { apps: ['t_apps', 't_apps2'], short: ['t_short'], underpass: ['t_underpass'] },
-  };
-  const DEFAULT_T = ['t_top_mid', 't_ramp_low', 't_palace', 't_apps', 't_underpass'];
-  const CT_HOLDS = { A: ['ct_a_ticket', 'ct_a_jungle', 'ct_a_stairs', 'ct_a_ct', 'ct_a_firebox', 'ct_a_triple'], MID: ['ct_window', 'ct_connector', 'ct_short'], B: ['ct_b_van', 'ct_b_bench', 'ct_b_market', 'ct_b_kitchen', 'ct_b_arch'] };
-  const RETAKE = { A: ['ct_a_ct', 'ct_a_jungle', 'ct_a_ticket'], B: ['ct_b_market', 'ct_b_arch', 'ct_b_kitchen'] };
-  const POSTPLANT = { A: ['pp_a_ramp', 'pp_a_palace', 'pp_a_sandwich', 'pp_a_triple'], B: ['pp_b_apps', 'pp_b_short', 'pp_b_van', 'pp_b_site'] };
-  const PLANTS = { A: ['plant_a', 'plant_a2'], B: ['plant_b', 'plant_b2'] };
+  // Per-map tactics: named spots, routes and site zones come from the active map.
+  const PLAN = BOT_PLAN;
+  const ZONES = PLAN.zones, ROUTES = PLAN.routes, DEFAULT_T = PLAN.defaultT, CT_HOLDS = PLAN.ctHolds;
+  const RETAKE = PLAN.retake, POSTPLANT = PLAN.postplant, PLANTS = PLAN.plants;
 
   function spot(name) { const s = SPOTS[name]; const y = World.gridFloor(s.p[0], s.p[1]); return { x: s.p[0], z: s.p[1], y: y === null ? 0 : y, look: s.look ? { x: s.look[0], z: s.look[1], y: (World.gridFloor(s.look[0], s.look[1]) || 0) + 56 } : null, name }; }
   function near(pos, r) { const q = World.randomNavPointNear(pos.x, pos.z, r, rnd); return { x: q.x, y: q.y, z: q.z, look: pos.look }; }
@@ -51,8 +42,10 @@ const Bots = (() => {
     if (!B.radio) return;
     if (!prio && Game.time - radioT < 2.5) return;
     if (!prio && p.ai && Game.time - (p.ai.lastRadio || -99) < 8) return;
+    // the same bot repeating itself, e.g. every frame while the C4 is still being drawn
+    if (p.ai && p.ai.lastText === text && Game.time - p.ai.lastRadio < 5) return;
     radioT = Game.time;
-    if (p.ai) p.ai.lastRadio = Game.time;
+    if (p.ai) { p.ai.lastRadio = Game.time; p.ai.lastText = text; }
     B.radio(p, text);
   }
 
@@ -134,7 +127,7 @@ const Bots = (() => {
     } else {
       S.executeAt = 0;
       // main route for the bomb carrier, others split across routes
-      const main = S.site === 'A' ? pick(['ramp', 'ramp', 'palace']) : pick(['apps', 'apps', 'short']);
+      const main = pick(PLAN.mainRoutes[S.site]);
       bots.forEach((p, i) => {
         let r = main;
         if (S.style === 'split') r = i % 2 === 0 ? main : pick(routes.filter(x => x !== main));
@@ -146,7 +139,7 @@ const Bots = (() => {
     // lurker
     if (S.style !== 'rush' && bots.length >= 4 && rnd() < 0.5) {
       const l = bots.find(p => !p.slots[5]);
-      if (l) { l.ai.role = 'lurk'; l.ai.hold = S.site === 'A' ? pick(['t_apps', 't_underpass', 't_top_mid']) : pick(['t_top_mid', 't_palace', 't_ramp_low']); }
+      if (l) { l.ai.role = 'lurk'; l.ai.hold = pick(PLAN.lurk[S.site]); }
     }
     for (const p of bots) p.ai.stage = null;
   }
@@ -163,7 +156,7 @@ const Bots = (() => {
     bots.forEach((p, i) => {
       let zone = roles[i % roles.length];
       let options = CT_HOLDS[zone].filter(s => !used.has(s));
-      if (p === awper) { zone = pick(['MID', 'A', 'B']); options = [{ MID: 'ct_window', A: 'ct_a_jungle', B: 'ct_b_market' }[zone]]; }
+      if (p === awper) { zone = pick(['MID', 'A', 'B']); options = [PLAN.awpSpots[zone]]; }
       const s = pick(options.length ? options : CT_HOLDS[zone]);
       used.add(s);
       p.ai.role = 'hold'; p.ai.zone = zone; p.ai.hold = s; p.ai.homeHold = s;
@@ -318,7 +311,7 @@ const Bots = (() => {
         if (!ai.stage) ai.stage = pick(stages);
         return holdObj(p, ai.stage, true);
       }
-      return holdObj(p, 't_top_mid');
+      return holdObj(p, PLAN.fallback);
     }
     // CT
     const C = TS.CT;
@@ -329,7 +322,7 @@ const Bots = (() => {
         let closest = null, cd = 1e9;
         for (const q of cts) { const d = Math.hypot(q.body.x - bomb.x, q.body.z - bomb.z); if (d < cd && q.isBot) { cd = d; closest = q; } }
         const need = Game.bombDefuseTime(p) + 0.6;
-        if (bomb.timer < need && !bomb.defuser) return holdObj(p, p.ai.homeHold || 'ct_a_ct');
+        if (bomb.timer < need && !bomb.defuser) return holdObj(p, p.ai.homeHold || RETAKE[bomb.site][0]);
         if (closest === p) return { x: bomb.x, y: bomb.y, z: bomb.z, key: 'defuse', defuse: true, run: true };
         if (!ai.entry || ai.entrySite !== bomb.site) { ai.entrySite = bomb.site; ai.entry = near({ x: bomb.x, z: bomb.z }, 300); }
         return { x: ai.entry.x, y: ai.entry.y, z: ai.entry.z, key: 'retakeEntry', run: true, arriveHold: true };
@@ -726,7 +719,7 @@ const Bots = (() => {
     const S = TS.T;
     const tb = Game.alive('T').filter(p => p.isBot);
     if (tb.length) {
-      const style = { rush: `Rush ${S.site}, all together!`, split: `Split ${S.site}, half go ${S.site === 'A' ? 'palace' : 'short'}`, default: 'Default, spread out and wait for my call' }[S.style];
+      const style = { rush: `Rush ${S.site}, all together!`, split: `Split ${S.site}, half go ${PLAN.splitWord[S.site]}`, default: 'Default, spread out and wait for my call' }[S.style];
       say(pick(tb), style, true);
     }
     const cb = Game.alive('CT').filter(p => p.isBot);

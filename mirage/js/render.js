@@ -5,7 +5,16 @@ const Render = (() => {
   const R = {};
   const C = hex => new THREE.Color(hex).convertSRGBToLinear();
   R.C = C;
+  // Per-map look: light, fog, sky and wall colours. Missing keys keep the Mirage defaults.
+  const TH = MAPDEF.theme || {};
+  const wallTint = t => TH.wallTint ? [t[0] * TH.wallTint[0], t[1] * TH.wallTint[1], t[2] * TH.wallTint[2]] : t;
   const srgb = t => { t.encoding = THREE.sRGBEncoding; t.needsUpdate = true; return t; };
+  // three.js bump mapping can produce a zero or NaN normal on walls seen at a grazing angle, which
+  // renders the whole face black. Fall back to the flat normal then, and limit how far bumps tilt it.
+  THREE.ShaderChunk.bumpmap_pars_fragment = THREE.ShaderChunk.bumpmap_pars_fragment.replace(
+    'return normalize( abs( fDet ) * surf_norm - vGrad );',
+    'vec3 bn = abs( fDet ) * surf_norm - vGrad; float bl = length( bn ); if ( !( bl > 1e-12 ) ) return surf_norm;' +
+    ' bn /= bl; float bk = dot( bn, surf_norm ); if ( bk < 0.4 ) bn = normalize( bn + surf_norm * ( 0.4 - bk ) * 2.0 ); return bn;');
   let seed = 99;
   const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 
@@ -185,16 +194,16 @@ const Render = (() => {
 
     scene = new THREE.Scene();
     scene.background = C('#9fc3e3');
-    scene.fog = new THREE.Fog(C('#d9cdb5'), 2600, 16000);
+    scene.fog = new THREE.Fog(C(TH.fog || '#d9cdb5'), 2600, 16000);
 
     camera = new THREE.PerspectiveCamera(73.74, 16 / 9, 2, 30000);
     camera.rotation.order = 'YXZ';
 
-    hemi = new THREE.HemisphereLight(C('#cfe2f5'), C('#8d7555'), 0.72);
+    hemi = new THREE.HemisphereLight(C(TH.hemiSky || '#cfe2f5'), C(TH.hemiGround || '#8d7555'), 0.72);
     scene.add(hemi);
-    sun = new THREE.DirectionalLight(C('#fff0d4'), 2.3);
+    sun = new THREE.DirectionalLight(C(TH.sunColor || '#fff0d4'), TH.sunIntensity || 2.3);
     const cxm = World.width / 2, czm = World.depth / 2;
-    const dir = new THREE.Vector3(0.52, 0.78, 0.36).normalize();
+    const dir = new THREE.Vector3(...(TH.sunDir || [0.52, 0.78, 0.36])).normalize();
     R.sunDir = dir;
     sun.position.set(cxm + dir.x * 4000, dir.y * 4000, czm + dir.z * 4000);
     sun.target.position.set(cxm, 0, czm);
@@ -272,7 +281,7 @@ const Render = (() => {
   function buildSky() {
     const t = srgb(Tex.get('sky'));
     const g = new THREE.SphereGeometry(24000, 32, 16);
-    const m = new THREE.MeshBasicMaterial({ map: t, side: THREE.BackSide, fog: false, depthWrite: false });
+    const m = new THREE.MeshBasicMaterial({ map: t, color: C(TH.sky || '#ffffff'), side: THREE.BackSide, fog: false, depthWrite: false });
     const sky = new THREE.Mesh(g, m);
     sky.position.set(World.width / 2, 0, World.depth / 2);
     sky.renderOrder = -10;
@@ -300,6 +309,7 @@ const Render = (() => {
   function wallMatFor(b) {
     const cxm = (b.x0 + b.x1) / 2;
     const h = hash2(Math.floor(b.x0 / 64) + 7, Math.floor(b.z0 / 64) + 13);
+    if (TH.wallMix) return h < TH.wallMix[0] ? 'sandstone' : h < TH.wallMix[1] ? 'plaster' : 'plasterWhite';
     const tside = cxm / World.width; // 0 = CT (west) .. 1 = T (east)
     if (h < 0.25 + tside * 0.25) return 'sandstone';
     if (h < 0.62 + tside * 0.15) return 'plaster';
@@ -450,7 +460,7 @@ const Render = (() => {
           }
         }
       } else if (b.kind === 'wall' || b.kind === 'roof') {
-        const M = wallMatFor(b), S = MATDEF[M].S, tint = tintFor(b);
+        const M = wallMatFor(b), S = MATDEF[M].S, tint = wallTint(tintFor(b));
         for (const f of sideFaces(b)) {
           const fi = faceInfo(f, b.y1);
           if (!fi.visible) continue;
@@ -754,7 +764,7 @@ const Render = (() => {
       const w = 200 + rnd() * 260, d = 200 + rnd() * 260, h = 420 + rnd() * 420;
       const M = rnd() < 0.4 ? 'sandstone' : rnd() < 0.5 ? 'plaster' : 'plasterWhite';
       const k = 0.85 + rnd() * 0.2;
-      emitBox(gb(M), x - w / 2, -100, z - d / 2, x + w / 2, h, z + d / 2, MATDEF[M].S, [k, k, k]);
+      emitBox(gb(M), x - w / 2, -100, z - d / 2, x + w / 2, h, z + d / 2, MATDEF[M].S, wallTint([k, k, k]));
       emitBox(gb('rail'), x - w / 2 - 5, h - 14, z - d / 2 - 5, x + w / 2 + 5, h + 2, z + d / 2 + 5, 128, [0.95, 0.95, 0.95]);
     }
     for (const n in gbs) { const m = new THREE.Mesh(gbs[n].build(), mat(n)); m.receiveShadow = true; scene.add(m); }
