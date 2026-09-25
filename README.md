@@ -1,5 +1,7 @@
 # Vesper-9
 
+> Also in this repo: **[Blackdamp](mine/)**, a horror escape from a coal mine full of blind creatures that hunt by sound.
+
 A first-person horror game on a failing orbital relay station, built with Three.js in a single `index.html`.
 
 You wake in crew quarters with life support on reserve. Your only way off is **emergency module EM-2**, still clamped to the ring. Recover three fuse cells, restart the reactor, release both docking clamps, then board EM-2 and survive the 15-second separation countdown while something hunts you.
