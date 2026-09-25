@@ -1,6 +1,6 @@
 # Vesper-9
 
-> Also in this repo: **[Blackdamp](mine/)**, a horror escape from a coal mine full of blind creatures that hunt by sound.
+> Also in this repo: **[Blackdamp](mine/)**, a three-level coal-mine horror escape with LAN co-op for up to four players.
 
 A first-person horror game on a failing orbital relay station, built with Three.js in a single `index.html`.
 
